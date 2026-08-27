@@ -4,53 +4,132 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Stikart Kongsberg</title>
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Caprasimo&family=Figtree:wght@400;600;700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
   <link rel="stylesheet" href="css/style.css">
 </head>
 <body>
-  <div id="sidebar">
-    <header>
-      <h1>Stikart Kongsberg</h1>
-      <p class="tagline">Sykkelstier i Gruveåsen og Knuteområdet</p>
-    </header>
+  <header id="topbar">
+    <span class="brand">Stikart <span class="brand-accent">Kongsberg</span></span>
+    <nav id="tabs">
+      <a href="#kart" class="tab" data-view="kart">Kart</a>
+      <a href="#ruter" class="tab" data-view="ruter">Ruter</a>
+      <a href="#punkter" class="tab" data-view="punkter">Punkter</a>
+      <a href="#om" class="tab" data-view="om">Om</a>
+    </nav>
+    <a href="#om" id="planner-btn">Ruteplanlegger</a>
+  </header>
 
-    <section class="filters">
-      <button class="chip active" data-diff="alle">Alle</button>
-      <button class="chip chip-gronn" data-diff="gronn">Grønn</button>
-      <button class="chip chip-bla" data-diff="bla">Blå</button>
-      <button class="chip chip-rod" data-diff="rod">Rød</button>
-      <button class="chip chip-sort" data-diff="sort">Sort</button>
-    </section>
+  <main>
+    <!-- ============ Kart-view ============ -->
+    <div id="view-kart" class="view">
+      <aside id="sidebar">
+        <div class="filter-row">
+          <button class="chip chip-alle active" data-diff="alle">Alle</button>
+          <button class="chip chip-gronn" data-diff="gronn">Grønn <span class="count"></span></button>
+          <button class="chip chip-bla" data-diff="bla">Blå <span class="count"></span></button>
+          <button class="chip chip-rod" data-diff="rod">Rød <span class="count"></span></button>
+          <button class="chip chip-sort" data-diff="sort">Sort <span class="count"></span></button>
+          <button id="filter-toggle" aria-label="Flere filtre" aria-expanded="false">⌃</button>
+        </div>
 
-    <section id="route-list"></section>
+        <div id="filter-panel" class="hidden">
+          <div class="filter-line">
+            <span class="filter-label">Lengde</span>
+            <button class="fchip" data-group="len" data-val="0-2">&lt; 2 km</button>
+            <button class="fchip" data-group="len" data-val="2-3">2–3 km</button>
+            <button class="fchip" data-group="len" data-val="3-999">&gt; 3 km</button>
+          </div>
+          <div class="filter-line">
+            <span class="filter-label">Høydemeter</span>
+            <button class="fchip" data-group="hm" data-val="0-100">&lt; 100</button>
+            <button class="fchip" data-group="hm" data-val="100-200">100–200</button>
+            <button class="fchip" data-group="hm" data-val="200-9999">&gt; 200</button>
+          </div>
+        </div>
 
-    <section class="poi-toggles">
-      <h2>Punkter i terrenget</h2>
-      <label><input type="checkbox" id="poi-gapahuk" checked> Gapahuker</label>
-      <label><input type="checkbox" id="poi-baalplass"> Bålplasser</label>
-      <label><input type="checkbox" id="poi-benk"> Benker</label>
-      <label><input type="checkbox" id="poi-kommune"> Kommunens sykkelruter</label>
-    </section>
+        <div id="route-list"></div>
 
-    <footer>
-      <p>Kart: <a href="https://kartverket.no" target="_blank">Kartverket</a> /
-        <a href="https://openstreetmap.org" target="_blank">OpenStreetMap</a>.
-        Punktdata: Kongsberg kommune.</p>
-    </footer>
-  </div>
+        <div class="source-line">Kart: Kartverket. Punktdata: Kongsberg kommune.</div>
+      </aside>
 
-  <div id="map"></div>
+      <div id="map-wrap">
+        <div id="map"></div>
 
-  <div id="profile-panel" class="hidden">
-    <div class="profile-header">
-      <div>
-        <strong id="profile-name"></strong>
-        <span id="profile-stats"></span>
+        <div id="legend">
+          <div><span class="legend-line" style="background:#3a7d4e"></span>Grønn — enkel</div>
+          <div><span class="legend-line" style="background:#2b6fb5"></span>Blå — middels</div>
+          <div><span class="legend-line" style="background:#c03b2d"></span>Rød — krevende</div>
+          <div><span class="legend-line" style="background:#1b1f24"></span>Sort — ekspert</div>
+        </div>
+
+        <div id="detail-card" class="hidden">
+          <div class="detail-photo"><span>foto fra stien</span></div>
+          <div class="detail-body">
+            <div class="detail-top">
+              <span id="detail-name"></span>
+              <span id="detail-badge"></span>
+              <span id="detail-stats"></span>
+              <span class="detail-actions">
+                <a id="detail-gpx" class="gpx-link" download>↓ GPX</a>
+                <button id="detail-close" title="Lukk">×</button>
+              </span>
+            </div>
+            <svg id="detail-svg" preserveAspectRatio="none"></svg>
+            <div class="detail-hint">Pek på grafen for høyde underveis — punktet følger med på kartlinja.</div>
+          </div>
+        </div>
       </div>
-      <button id="profile-close" title="Lukk">&times;</button>
     </div>
-    <svg id="profile-svg" preserveAspectRatio="none"></svg>
-  </div>
+
+    <!-- ============ Ruter-view ============ -->
+    <div id="view-ruter" class="view hidden">
+      <div class="ruter-header">
+        <span class="page-title">Ruter</span>
+        <span id="ruter-subtitle" class="page-subtitle"></span>
+        <div class="ruter-tools">
+          <div id="grid-filter" class="pill-group">
+            <button class="gchip active" data-diff="alle">Alle <span class="count"></span></button>
+            <button class="gchip" data-diff="gronn"><span class="gdot" style="background:#3a7d4e"></span><span class="count"></span></button>
+            <button class="gchip" data-diff="bla"><span class="gdot" style="background:#2b6fb5"></span><span class="count"></span></button>
+            <button class="gchip" data-diff="rod"><span class="gdot" style="background:#c03b2d"></span><span class="count"></span></button>
+            <button class="gchip" data-diff="sort"><span class="gdot" style="background:#1b1f24"></span><span class="count"></span></button>
+          </div>
+          <button id="sort-btn">Sorter: lengde ▾</button>
+        </div>
+      </div>
+      <div id="route-grid"></div>
+    </div>
+
+    <!-- ============ Punkter-view ============ -->
+    <div id="view-punkter" class="view hidden">
+      <div class="ruter-header">
+        <span class="page-title">Punkter</span>
+        <span class="page-subtitle">Velg hvilke punkter som vises i kartet</span>
+      </div>
+      <div id="poi-cards">
+        <label class="poi-card"><input type="checkbox" id="poi-gapahuk" checked><span class="poi-dot" style="background:#3a7d4e"></span> Gapahuker</label>
+        <label class="poi-card"><input type="checkbox" id="poi-baalplass"><span class="poi-dot" style="background:#b3872e"></span> Bålplasser</label>
+        <label class="poi-card"><input type="checkbox" id="poi-benk"><span class="poi-dot" style="background:#1f5688"></span> Benker</label>
+        <label class="poi-card"><input type="checkbox" id="poi-kommune"><span class="poi-dot" style="background:#1f5688"></span> Kommunens sykkelruter</label>
+      </div>
+      <p class="stub-note">Punktene vises i Kart-fanen. Flere punkttyper (badeplass, fiskeplass, gruveminner) kommer.</p>
+    </div>
+
+    <!-- ============ Om-view ============ -->
+    <div id="view-om" class="view hidden">
+      <div class="ruter-header">
+        <span class="page-title">Om</span>
+      </div>
+      <div class="om-body">
+        <p>Stikart Kongsberg samler sykkelbare stier i Gruveåsen og Knuteområdet —
+        kategorisert etter vanskelighet (grønn/blå/rød/sort) med høydeprofil og GPX-nedlasting.</p>
+        <p>Kartgrunnlag fra Kartverket og OpenStreetMap. Punktdata fra Kongsberg kommune.
+        Ruteplanleggeren er under arbeid.</p>
+      </div>
+    </div>
+  </main>
 
   <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
   <script src="js/routes.js"></script>

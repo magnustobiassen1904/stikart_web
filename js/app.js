@@ -1,27 +1,17 @@
 // Stikart Kongsberg — kartlogikk
 
-const DIFF_COLORS = { gronn: "#2e8b57", bla: "#2f6fd6", rod: "#d63b3b", sort: "#1c1c1c" };
+const DIFF_COLORS = { gronn: "#3a7d4e", bla: "#2b6fb5", rod: "#c03b2d", sort: "#1b1f24" };
 const DIFF_LABELS = { gronn: "Grønn", bla: "Blå", rod: "Rød", sort: "Sort" };
+const HALO_COLOR = "#f3f6f9";
 
 // --- Kart og bakgrunnslag -------------------------------------------------
 
 const map = L.map("map", { zoomControl: true }).setView([59.665, 9.62], 13);
+map.zoomControl.setPosition("topright");
 
-const baseKartverket = L.tileLayer(
-  "https://cache.kartverket.no/v1/wmts/1.0.0/topo/default/webmercator/{z}/{y}/{x}.png",
-  { maxZoom: 18, attribution: "&copy; Kartverket" }
-);
-const baseOSM = L.tileLayer("https://tile.openstreetmap.org/{z}/{x}/{y}.png", {
-  maxZoom: 19,
-  attribution: "&copy; OpenStreetMap-bidragsytere",
-});
-baseKartverket.addTo(map);
-L.control
-  .layers({ "Kartverket topo": baseKartverket, "OpenStreetMap": baseOSM }, null, {
-    position: "topright",
-    collapsed: false,
-  })
-  .addTo(map);
+const KARTVERKET_URL =
+  "https://cache.kartverket.no/v1/wmts/1.0.0/topo/default/webmercator/{z}/{y}/{x}.png";
+L.tileLayer(KARTVERKET_URL, { maxZoom: 18, attribution: "&copy; Kartverket" }).addTo(map);
 
 // --- GPX-parsing ----------------------------------------------------------
 
@@ -76,56 +66,105 @@ function routeStats(pts) {
   };
 }
 
+// --- Views (faner) --------------------------------------------------------
+
+const VIEWS = ["kart", "ruter", "punkter", "om"];
+let miniMapsBuilt = false;
+
+function currentView() {
+  const h = location.hash.replace("#", "");
+  return VIEWS.includes(h) ? h : "kart";
+}
+
+function showView(name) {
+  for (const v of VIEWS) {
+    document.getElementById(`view-${v}`).classList.toggle("hidden", v !== name);
+  }
+  document.querySelectorAll(".tab").forEach((t) => {
+    t.classList.toggle("active", t.dataset.view === name);
+  });
+  if (name === "kart") setTimeout(() => map.invalidateSize(), 0);
+  if (name === "ruter" && !miniMapsBuilt) {
+    miniMapsBuilt = true;
+    setTimeout(buildMiniMaps, 0);
+  }
+}
+
+window.addEventListener("hashchange", () => showView(currentView()));
+
 // --- Ruter ----------------------------------------------------------------
 
-const routeLayers = []; // {route, layer, pts, stats}
+const routeLayers = []; // {route, layer, halo, group, pts, stats, card, gridCard}
 let selected = null;
+let hoverMarker = null;
 
 function baseStyle(route) {
-  return { color: DIFF_COLORS[route.difficulty], weight: 4, opacity: 0.9 };
+  return { color: DIFF_COLORS[route.difficulty], weight: 4.5, opacity: 0.95 };
+}
+
+// Nedfarter har nesten null stigning — bruk største av stigning/fall som høydemeter
+function hmOf(stats) {
+  return Math.max(stats.ascent, stats.descent);
+}
+
+function metaLine(route, stats) {
+  return `${DIFF_LABELS[route.difficulty]} · ${stats.km.toFixed(1).replace(".", ",")} km · ${hmOf(stats)} hm`;
 }
 
 function selectRoute(entry) {
   if (selected) selected.layer.setStyle(baseStyle(selected.route));
   selected = entry;
-  entry.layer.setStyle({ weight: 7, opacity: 1 });
+  entry.layer.setStyle({ weight: 6.5, opacity: 1 });
+  entry.halo.bringToFront();
   entry.layer.bringToFront();
   map.fitBounds(entry.layer.getBounds(), { padding: [40, 40] });
-  showProfile(entry);
+  showDetail(entry);
   document
     .querySelectorAll(".route-card")
     .forEach((el) => el.classList.toggle("selected", el.dataset.file === entry.route.file));
 }
 
+function registerRoute(route, pts) {
+  const stats = routeStats(pts);
+  const latlngs = pts.map((p) => [p.lat, p.lon]);
+  const halo = L.polyline(latlngs, {
+    color: HALO_COLOR,
+    weight: 9,
+    opacity: 1,
+  }).addTo(map);
+  const layer = L.polyline(latlngs, baseStyle(route)).addTo(map);
+  const entry = { route, layer, halo, pts, stats };
+  layer.on("click", () => selectRoute(entry));
+  layer.bindTooltip(route.name, { sticky: true });
+
+  // Kort i venstremenyen
+  const card = document.createElement("div");
+  card.className = "route-card";
+  card.dataset.file = route.file;
+  card.innerHTML = `
+    <span class="diff-dot" style="background:${DIFF_COLORS[route.difficulty]}"></span>
+    <div>
+      <div class="route-name">${route.name}</div>
+      <div class="route-meta">${metaLine(route, stats)}</div>
+    </div>`;
+  card.addEventListener("click", () => selectRoute(entry));
+  document.getElementById("route-list").appendChild(card);
+  entry.card = card;
+
+  // Kort i galleriet
+  entry.gridCard = buildGridCard(entry);
+
+  routeLayers.push(entry);
+  return entry;
+}
+
 async function loadRoutes() {
-  const list = document.getElementById("route-list");
   for (const route of ROUTES) {
     try {
       const text = await (await fetch(route.file)).text();
       const pts = parseGpx(text);
       if (!pts.length) continue;
-      const stats = routeStats(pts);
-      const layer = L.polyline(
-        pts.map((p) => [p.lat, p.lon]),
-        baseStyle(route)
-      ).addTo(map);
-      const entry = { route, layer, pts, stats };
-      layer.on("click", () => selectRoute(entry));
-      layer.bindTooltip(route.name, { sticky: true });
-      routeLayers.push(entry);
-
-      const card = document.createElement("div");
-      card.className = "route-card";
-      card.dataset.file = route.file;
-      card.dataset.diff = route.difficulty;
-      card.innerHTML = `
-        <span class="diff-dot" style="background:${DIFF_COLORS[route.difficulty]}"></span>
-        <div>
-          <div class="route-name">${route.name}</div>
-          <div class="route-meta">${DIFF_LABELS[route.difficulty]} &middot; ${stats.km.toFixed(1)} km &middot; ${stats.ascent} m stigning</div>
-        </div>`;
-      card.addEventListener("click", () => selectRoute(entry));
-      list.appendChild(card);
+      registerRoute(route, pts);
     } catch (err) {
       console.error("Klarte ikke laste", route.file, err);
     }
@@ -134,63 +173,386 @@ async function loadRoutes() {
     const all = L.featureGroup(routeLayers.map((e) => e.layer));
     map.fitBounds(all.getBounds(), { padding: [40, 40] });
   }
+  updateCounts();
+  sortGrid();
+  if (currentView() === "ruter") {
+    miniMapsBuilt = true;
+    buildMiniMaps();
+  }
 }
 
-// --- Vanskelighetsfilter --------------------------------------------------
+// --- Filtre (deles av kart-view og ruter-view) ----------------------------
 
-document.querySelectorAll(".chip").forEach((chip) => {
-  chip.addEventListener("click", () => {
-    document.querySelectorAll(".chip").forEach((c) => c.classList.remove("active"));
-    chip.classList.add("active");
-    const diff = chip.dataset.diff;
-    for (const entry of routeLayers) {
-      const show = diff === "alle" || entry.route.difficulty === diff;
-      if (show) entry.layer.addTo(map);
-      else map.removeLayer(entry.layer);
+const filterState = { diff: "alle", len: null, hm: null };
+
+function inRange(val, range) {
+  if (!range) return true;
+  const [lo, hi] = range.split("-").map(Number);
+  return val >= lo && val < hi;
+}
+
+function entryVisible(entry) {
+  const { route, stats } = entry;
+  if (filterState.diff !== "alle" && route.difficulty !== filterState.diff) return false;
+  if (!inRange(stats.km, filterState.len)) return false;
+  if (!inRange(hmOf(stats), filterState.hm)) return false;
+  return true;
+}
+
+function applyFilters() {
+  for (const entry of routeLayers) {
+    const show = entryVisible(entry);
+    if (show) {
+      entry.halo.addTo(map);
+      entry.layer.addTo(map);
+      entry.layer.bringToFront();
+    } else {
+      map.removeLayer(entry.layer);
+      map.removeLayer(entry.halo);
     }
-    document.querySelectorAll(".route-card").forEach((el) => {
-      el.style.display = diff === "alle" || el.dataset.diff === diff ? "" : "none";
-    });
+    entry.card.style.display = show ? "" : "none";
+    entry.gridCard.style.display = show ? "" : "none";
+  }
+}
+
+function updateCounts() {
+  const counts = { alle: routeLayers.length, gronn: 0, bla: 0, rod: 0, sort: 0 };
+  for (const e of routeLayers) counts[e.route.difficulty]++;
+  document.querySelectorAll(".chip .count, .gchip .count").forEach((el) => {
+    const diff = el.closest("[data-diff]").dataset.diff;
+    el.textContent = counts[diff];
+  });
+  document.querySelectorAll(".chip[data-diff], .gchip[data-diff]").forEach((c) => {
+    if (c.dataset.diff !== "alle") c.style.display = counts[c.dataset.diff] ? "" : "none";
+  });
+  document.getElementById("ruter-subtitle").textContent =
+    `${counts.alle} sykkelbare stier i Gruveåsen og Knuteområdet`;
+}
+
+function setDiffFilter(diff) {
+  filterState.diff = diff;
+  document.querySelectorAll(".chip[data-diff], .gchip[data-diff]").forEach((c) => {
+    c.classList.toggle("active", c.dataset.diff === diff);
+  });
+  applyFilters();
+}
+
+document.querySelectorAll(".chip[data-diff], .gchip[data-diff]").forEach((chip) => {
+  chip.addEventListener("click", () => setDiffFilter(chip.dataset.diff));
+});
+
+document.querySelectorAll(".fchip").forEach((chip) => {
+  chip.addEventListener("click", () => {
+    const group = chip.dataset.group;
+    const wasActive = chip.classList.contains("active");
+    document
+      .querySelectorAll(`.fchip[data-group="${group}"]`)
+      .forEach((c) => c.classList.remove("active"));
+    if (wasActive) {
+      filterState[group] = null;
+    } else {
+      chip.classList.add("active");
+      filterState[group] = chip.dataset.val;
+    }
+    applyFilters();
   });
 });
 
-// --- Høydeprofil ----------------------------------------------------------
-
-const panel = document.getElementById("profile-panel");
-document.getElementById("profile-close").addEventListener("click", () => {
-  panel.classList.add("hidden");
-  if (selected) selected.layer.setStyle(baseStyle(selected.route));
-  selected = null;
-  document.querySelectorAll(".route-card").forEach((el) => el.classList.remove("selected"));
+const filterToggle = document.getElementById("filter-toggle");
+filterToggle.addEventListener("click", () => {
+  const panel = document.getElementById("filter-panel");
+  const open = panel.classList.toggle("hidden");
+  filterToggle.setAttribute("aria-expanded", String(!open));
 });
 
-function showProfile(entry) {
-  const { route, pts, stats } = entry;
-  document.getElementById("profile-name").textContent = route.name;
-  document.getElementById("profile-stats").textContent =
-    ` ${stats.km.toFixed(1)} km · +${stats.ascent} m / −${stats.descent} m · ` +
-    `${Math.round(stats.minEle)}–${Math.round(stats.maxEle)} moh.`;
+// --- Detaljkort med interaktiv høydeprofil --------------------------------
 
-  const svg = document.getElementById("profile-svg");
-  const W = 1000,
-    H = 160,
-    pad = 6;
-  svg.setAttribute("viewBox", `0 0 ${W} ${H}`);
+const detailCard = document.getElementById("detail-card");
+const detailSvg = document.getElementById("detail-svg");
+let PROFILE_W = 700;
+const PROFILE_H = 84;
+const PROFILE_PAD = 4;
+
+document.getElementById("detail-close").addEventListener("click", closeDetail);
+
+function closeDetail() {
+  detailCard.classList.add("hidden");
+  if (selected) selected.layer.setStyle(baseStyle(selected.route));
+  selected = null;
+  removeHoverMarker();
+  document.querySelectorAll(".route-card").forEach((el) => el.classList.remove("selected"));
+}
+
+function removeHoverMarker() {
+  if (hoverMarker) {
+    map.removeLayer(hoverMarker);
+    hoverMarker = null;
+  }
+}
+
+function profileXY(entry, i) {
+  const { pts, stats } = entry;
   const span = Math.max(stats.maxEle - stats.minEle, 10);
   const total = stats.cum[stats.cum.length - 1] || 1;
-  const xy = (i) => {
-    const x = pad + (stats.cum[i] / total) * (W - 2 * pad);
-    const y = H - pad - ((pts[i].ele - stats.minEle) / span) * (H - 2 * pad);
-    return `${x.toFixed(1)},${y.toFixed(1)}`;
-  };
-  const line = pts.map((_, i) => xy(i)).join(" ");
-  const color = DIFF_COLORS[route.difficulty];
-  svg.innerHTML = `
-    <polygon points="${pad},${H - pad} ${line} ${W - pad},${H - pad}"
-             fill="${color}" opacity="0.15"/>
-    <polyline points="${line}" fill="none" stroke="${color}" stroke-width="2.5"/>`;
-  panel.classList.remove("hidden");
+  const x = PROFILE_PAD + (stats.cum[i] / total) * (PROFILE_W - 2 * PROFILE_PAD);
+  const y =
+    PROFILE_H - PROFILE_PAD - ((pts[i].ele - stats.minEle) / span) * (PROFILE_H - 26 - PROFILE_PAD);
+  return [x, y];
 }
+
+function showDetail(entry) {
+  const { route, pts, stats } = entry;
+  document.getElementById("detail-name").textContent = route.name;
+  const badge = document.getElementById("detail-badge");
+  badge.textContent = DIFF_LABELS[route.difficulty];
+  badge.style.background = DIFF_COLORS[route.difficulty];
+  document.getElementById("detail-stats").textContent =
+    `${stats.km.toFixed(1).replace(".", ",")} km · +${stats.ascent} m / −${stats.descent} m · ` +
+    `${Math.round(stats.minEle)}–${Math.round(stats.maxEle)} moh.`;
+  const gpx = document.getElementById("detail-gpx");
+  gpx.href = route.file;
+  gpx.download = route.file.split("/").pop();
+
+  detailCard.classList.remove("hidden");
+  PROFILE_W = Math.max(detailSvg.clientWidth || 700, 300);
+  detailSvg.setAttribute("viewBox", `0 0 ${PROFILE_W} ${PROFILE_H}`);
+  const line = pts.map((_, i) => profileXY(entry, i).join(",")).join(" ");
+  const color = DIFF_COLORS[route.difficulty];
+  detailSvg.innerHTML = `
+    <polygon points="${PROFILE_PAD},${PROFILE_H} ${line} ${PROFILE_W - PROFILE_PAD},${PROFILE_H}"
+             fill="${color}" opacity="0.12"/>
+    <polyline points="${line}" fill="none" stroke="${color}" stroke-width="2.5"
+              stroke-linecap="round"/>
+    <g id="hover-group" style="display:none">
+      <line id="hover-line" y1="22" y2="${PROFILE_H}" stroke="${color}" stroke-width="1"
+            stroke-dasharray="3 3"/>
+      <circle id="hover-dot" r="5" fill="${color}" stroke="#fff" stroke-width="2"/>
+      <rect id="hover-pill" y="0" width="124" height="20" rx="10" fill="#16283e"/>
+      <text id="hover-text" y="13.5" font-size="11" fill="#eef2f6" text-anchor="middle"
+            font-family="Figtree, sans-serif" font-weight="600"></text>
+    </g>`;
+}
+
+detailSvg.addEventListener("mousemove", (ev) => {
+  if (!selected) return;
+  const rect = detailSvg.getBoundingClientRect();
+  const frac = Math.min(Math.max((ev.clientX - rect.left) / rect.width, 0), 1);
+  const { pts, stats } = selected;
+  const target = frac * (stats.cum[stats.cum.length - 1] || 1);
+  let i = stats.cum.findIndex((d) => d >= target);
+  if (i < 0) i = pts.length - 1;
+
+  const [x, y] = profileXY(selected, i);
+  const group = detailSvg.querySelector("#hover-group");
+  group.style.display = "";
+  const lineEl = detailSvg.querySelector("#hover-line");
+  lineEl.setAttribute("x1", x);
+  lineEl.setAttribute("x2", x);
+  const dot = detailSvg.querySelector("#hover-dot");
+  dot.setAttribute("cx", x);
+  dot.setAttribute("cy", y);
+  const pill = detailSvg.querySelector("#hover-pill");
+  const pillX = Math.min(Math.max(x - 62, 0), PROFILE_W - 124);
+  pill.setAttribute("x", pillX);
+  const text = detailSvg.querySelector("#hover-text");
+  text.setAttribute("x", pillX + 62);
+  const km = (stats.cum[i] / 1000).toFixed(1).replace(".", ",");
+  text.textContent = `${km} km · ${Math.round(pts[i].ele)} moh.`;
+
+  const ll = [pts[i].lat, pts[i].lon];
+  if (!hoverMarker) {
+    hoverMarker = L.circleMarker(ll, {
+      radius: 7,
+      color: "#fff",
+      weight: 2.5,
+      fillColor: DIFF_COLORS[selected.route.difficulty],
+      fillOpacity: 1,
+    }).addTo(map);
+  } else {
+    hoverMarker.setLatLng(ll);
+  }
+});
+
+detailSvg.addEventListener("mouseleave", () => {
+  const group = detailSvg.querySelector("#hover-group");
+  if (group) group.style.display = "none";
+  removeHoverMarker();
+});
+
+// --- Ruter-view: kortgalleri ----------------------------------------------
+
+const routeGrid = document.getElementById("route-grid");
+
+function miniProfilePoints(entry, w, h) {
+  const { pts, stats } = entry;
+  const span = Math.max(stats.maxEle - stats.minEle, 10);
+  const total = stats.cum[stats.cum.length - 1] || 1;
+  const step = Math.max(1, Math.floor(pts.length / 60));
+  const coords = [];
+  for (let i = 0; i < pts.length; i += step) {
+    const x = (stats.cum[i] / total) * w;
+    const y = h - 3 - ((pts[i].ele - stats.minEle) / span) * (h - 8);
+    coords.push(`${x.toFixed(1)},${y.toFixed(1)}`);
+  }
+  return coords.join(" ");
+}
+
+function buildGridCard(entry) {
+  const { route, stats } = entry;
+  const color = DIFF_COLORS[route.difficulty];
+  const card = document.createElement("div");
+  card.className = "grid-card";
+  const line = miniProfilePoints(entry, 240, 36);
+  const status = route.temp ? "Forhåndsvisning — ikke lagret" : "Åpen · tørr sti";
+  card.innerHTML = `
+    <div class="grid-map">
+      <div class="mini-map"></div>
+      <span class="grid-diff-dot" style="background:${color}"></span>
+    </div>
+    <div class="grid-body">
+      <span class="grid-name">${route.name}</span>
+      <span class="grid-meta">${metaLine(route, stats)}</span>
+      <svg class="grid-profile" viewBox="0 0 240 36" preserveAspectRatio="none">
+        <polygon points="0,36 ${line} 240,36" fill="rgba(31,86,136,0.1)"/>
+        <polyline points="${line}" fill="none" stroke="${color}" stroke-width="2"
+                  stroke-linecap="round"/>
+      </svg>
+      <div class="grid-footer">
+        <a class="gpx-link" href="${route.file}" download>↓ GPX</a>
+        <span class="grid-status">${status}</span>
+      </div>
+    </div>`;
+  card.addEventListener("click", (ev) => {
+    if (ev.target.closest(".gpx-link")) return;
+    location.hash = "#kart";
+    showView("kart");
+    selectRoute(entry);
+  });
+  routeGrid.insertBefore(card, document.getElementById("dropzone"));
+  return card;
+}
+
+function buildMiniMaps() {
+  for (const entry of routeLayers) {
+    const el = entry.gridCard.querySelector(".mini-map");
+    if (!el || el.dataset.built) continue;
+    el.dataset.built = "1";
+    const mini = L.map(el, {
+      zoomControl: false,
+      attributionControl: false,
+      dragging: false,
+      scrollWheelZoom: false,
+      doubleClickZoom: false,
+      boxZoom: false,
+      keyboard: false,
+      touchZoom: false,
+    });
+    L.tileLayer(KARTVERKET_URL, { maxZoom: 18 }).addTo(mini);
+    const latlngs = entry.pts.map((p) => [p.lat, p.lon]);
+    L.polyline(latlngs, { color: HALO_COLOR, weight: 6, opacity: 1 }).addTo(mini);
+    L.polyline(latlngs, {
+      color: DIFF_COLORS[entry.route.difficulty],
+      weight: 3,
+      opacity: 1,
+    }).addTo(mini);
+    L.circleMarker(latlngs[0], {
+      radius: 4,
+      color: "#fff",
+      weight: 2,
+      fillColor: DIFF_COLORS[entry.route.difficulty],
+      fillOpacity: 1,
+    }).addTo(mini);
+    mini.fitBounds(L.latLngBounds(latlngs), { padding: [14, 14] });
+  }
+}
+
+// --- Sortering -------------------------------------------------------------
+
+const SORT_MODES = [
+  { key: "lengde", label: "Sorter: lengde ▾", cmp: (a, b) => a.stats.km - b.stats.km },
+  { key: "høydemeter", label: "Sorter: høydemeter ▾", cmp: (a, b) => hmOf(b.stats) - hmOf(a.stats) },
+  { key: "navn", label: "Sorter: navn ▾", cmp: (a, b) => a.route.name.localeCompare(b.route.name, "no") },
+];
+let sortIdx = 0;
+
+function sortGrid() {
+  const mode = SORT_MODES[sortIdx];
+  const dropzone = document.getElementById("dropzone");
+  [...routeLayers]
+    .sort(mode.cmp)
+    .forEach((e) => routeGrid.insertBefore(e.gridCard, dropzone));
+}
+
+document.getElementById("sort-btn").addEventListener("click", () => {
+  sortIdx = (sortIdx + 1) % SORT_MODES.length;
+  document.getElementById("sort-btn").textContent = SORT_MODES[sortIdx].label;
+  sortGrid();
+});
+
+// --- Dropsone: forhåndsvis GPX --------------------------------------------
+
+const dropzone = document.createElement("div");
+dropzone.id = "dropzone";
+dropzone.innerHTML = `
+  <div class="dropzone-inner">
+    <span class="dropzone-plus">+</span>
+    <span class="dropzone-title">Legg til rute</span>
+    <span class="dropzone-sub">Slipp en GPX-fil her</span>
+  </div>`;
+routeGrid.appendChild(dropzone);
+
+const fileInput = document.createElement("input");
+fileInput.type = "file";
+fileInput.accept = ".gpx";
+fileInput.style.display = "none";
+document.body.appendChild(fileInput);
+
+function previewGpxFile(file) {
+  const reader = new FileReader();
+  reader.onload = () => {
+    const pts = parseGpx(reader.result);
+    if (!pts.length) {
+      alert("Fant ingen sporpunkter i fila — er det en GPX med <trkpt>?");
+      return;
+    }
+    const route = {
+      file: URL.createObjectURL(file),
+      name: file.name.replace(/\.gpx$/i, "") + " (forhåndsvisning)",
+      difficulty: "bla",
+      temp: true,
+      description: "Forhåndsvisning — ikke lagret.",
+    };
+    const entry = registerRoute(route, pts);
+    updateCounts();
+    sortGrid();
+    if (miniMapsBuilt) buildMiniMaps();
+    alert(
+      "Ruta vises nå som forhåndsvisning (blå). For å lagre den permanent: " +
+        "legg GPX-fila i routes/ og registrer den i js/routes.js."
+    );
+    location.hash = "#kart";
+    showView("kart");
+    selectRoute(entry);
+  };
+  reader.readAsText(file);
+}
+
+dropzone.addEventListener("click", () => fileInput.click());
+fileInput.addEventListener("change", () => {
+  if (fileInput.files[0]) previewGpxFile(fileInput.files[0]);
+  fileInput.value = "";
+});
+dropzone.addEventListener("dragover", (ev) => {
+  ev.preventDefault();
+  dropzone.classList.add("dragover");
+});
+dropzone.addEventListener("dragleave", () => dropzone.classList.remove("dragover"));
+dropzone.addEventListener("drop", (ev) => {
+  ev.preventDefault();
+  dropzone.classList.remove("dragover");
+  const file = [...ev.dataTransfer.files].find((f) => /\.gpx$/i.test(f.name));
+  if (file) previewGpxFile(file);
+});
 
 // --- Punkter fra kommunens data -------------------------------------------
 
@@ -215,9 +577,9 @@ function poiLayer(url, color, labelFn) {
 }
 
 const poiLayers = {
-  "poi-gapahuk": poiLayer("data/gapahuk.geojson", "#8b5a2b", (p) => p.NAVN || "Gapahuk"),
-  "poi-baalplass": poiLayer("data/baalplass.geojson", "#e67e22", (p) => p.NAVN || "Bålplass"),
-  "poi-benk": poiLayer("data/sittebenk.geojson", "#3b7dd8", (p) => p.NAVN || "Benk"),
+  "poi-gapahuk": poiLayer("data/gapahuk.geojson", "#3a7d4e", (p) => p.NAVN || "Gapahuk"),
+  "poi-baalplass": poiLayer("data/baalplass.geojson", "#b3872e", (p) => p.NAVN || "Bålplass"),
+  "poi-benk": poiLayer("data/sittebenk.geojson", "#1f5688", (p) => p.NAVN || "Benk"),
 };
 
 // Kommunens merkede sykkelruter som eget referanselag (stiplet blå)
@@ -227,7 +589,7 @@ for (const f of ["data/sykkelrute_sti.geojson", "data/sykkelrute_vei.geojson"]) 
     .then((r) => r.json())
     .then((geojson) => {
       L.geoJSON(geojson, {
-        style: { color: "#2a6fd6", weight: 2, dashArray: "6 6", opacity: 0.7 },
+        style: { color: "#1f5688", weight: 2, dashArray: "6 6", opacity: 0.6 },
       })
         .bindTooltip("Kommunens merkede sykkelrute", { sticky: true })
         .addTo(kommuneRuter);
@@ -244,4 +606,7 @@ for (const [id, layer] of Object.entries(poiLayers)) {
   });
 }
 
+// --- Init ------------------------------------------------------------------
+
+showView(currentView());
 loadRoutes();

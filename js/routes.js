@@ -78,28 +78,4 @@ const ROUTES = [
     description:
       "Nedfart 884 m. Bekreftet syklet (MTB-tur 2022-07-21). Fra Trailguide.",
   },
-  {
-    file: "routes/kommune_sykkelsti_1.gpx",
-    name: "Sykkelrute på sti (kommunedata)",
-    difficulty: "rod",
-    description: "Merket sykkelrute på sti fra kommunens friluftskart. Skal erstattes/døpes om.",
-  },
-  {
-    file: "routes/kommune_sykkelvei_1.gpx",
-    name: "Sykkelrute på vei 1 (kommunedata)",
-    difficulty: "gronn",
-    description: "Merket sykkelrute på vei fra kommunens friluftskart.",
-  },
-  {
-    file: "routes/kommune_sykkelvei_2.gpx",
-    name: "Sykkelrute på vei 2 (kommunedata)",
-    difficulty: "gronn",
-    description: "Merket sykkelrute på vei fra kommunens friluftskart.",
-  },
-  {
-    file: "routes/kommune_sykkelvei_3.gpx",
-    name: "Sykkelrute på vei 3 (kommunedata)",
-    difficulty: "gronn",
-    description: "Merket sykkelrute på vei fra kommunens friluftskart.",
-  },
 ];
