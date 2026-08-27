@@ -1,6 +1,43 @@
 # SESSION_LOG — stikart_web
 
 
+## Session — 2026-08-27 (natt: redesign implementert fra Claude Design)
+
+**Worked on:**
+- Hentet designhandoff fra Claude Design-prosjektet via DesignSync MCP (prosjekt-id b5c64049-2268-4f0a-bc90-0585a3f098fd). Fasit = runde **4a/4b** i `Stikart Designforslag.dc.html`; `design_handoff_stikart_kongsberg/README.md` i det prosjektet er full spesifikasjon (tokens, typografi, komponenter).
+- Implementerte hele redesignet i repoets arkitektur (ren HTML/CSS/JS + Leaflet, ingen rammeverk): `index.html`, `css/style.css`, `js/app.js` omskrevet.
+- Fjernet de 4 navnløse kommune-samplerutene (GPX slettet, ut av `js/routes.js`) på Magnus' beskjed. Kommunens ruter finnes fortsatt som stiplet referanselag (av/på under Punkter).
+
+**Progress:** Ny UI: toppmeny med faner (Kart/Ruter/Punkter/Om, hash-ruting), Kongsberg-palett (sølvgrå #eef2f6, blå #1f5688, gull #b3872e), Caprasimo/Figtree, pill-former. Kart-view: filterrad med antall + ekspanderbart panel (lengde/høydemeter), halo under rutelinjene, avdempet Kartverket-lag (saturate 0.55), legend, detaljkort med **interaktiv høydeprofil** (hover → tooltip + markør som følger kartlinja), GPX-nedlasting. Ruter-view: kortgalleri med ekte Leaflet-minikart per rute, mini-profil, sortering, GPX-dropsone (FileReader-forhåndsvisning). Verifisert med headless Chrome-skjermbilder — begge views rendrer som designet.
+
+**Key decisions:**
+- Blå gradering fikk #2b6fb5 (designet definerte bare grønn/rød/sort — blå fantes ikke i mocken).
+- Legend bruker 4-trinns standard: grønn enkel / blå middels / rød krevende / sort ekspert (avviker fra mockens «rød middels» fordi vi har blå).
+- Høydemeter i meta/filter = max(stigning, fall) — nedfarter har ~0 stigning, så «hm» viser fallet.
+- Graderingschips med 0 ruter skjules (grønn og sort er nå tomme etter at samplerutene røk).
+- POI-av/på flyttet til Punkter-fanen (designet hadde dem ikke i sidepanelet); «Underlag»-filteret utelatt til data finnes (som README åpnet for).
+
+**Open task list (carry forward):**
+- [x] Redesign 4a (Kart-view) + 4b (Ruter-view) implementert og pushet
+- [x] Kommune-sampleruter fjernet
+- [ ] Vis kartet til kompisen — bekreft navn/gradering (spesielt «Heimaten» og «Sachsen 1»)
+- [ ] Grusvei-transportetapper (Knuteveien, Korsveien — xcountry-spor i Trailguide-snapshotten)
+- [ ] POI: Korset/monumenter/gruveminner (+ badeplass/fiskeplass)
+- [ ] Vurder å bytte Trailguide-geometri mot Magnus' egne kjørte spor (Gule Sva, Gruvesafari 2022)
+- [ ] GitHub Pages-hosting
+- [ ] «Ruteplanlegger»-knappen er stubb (peker til Om) — designe/bygge senere
+- [ ] Ekte foto av stiene til detaljkortet (placeholder-striper nå)
+- [ ] Mobiltilpasning er grov (media queries finnes) — test på telefon
+
+**Git commits:**
+- 0809ba4 Redesign fra Claude Design (runde 4): faner, Kongsberg-palett, Ruter-galleri med minikart, interaktiv høydeprofil; kommune-sampleruter fjernet
+
+**Blockers / open questions:** Ingen tekniske. Designavvik å nevne for Magnus: blåfargen og 4-trinns legend var mine valg (mocken hadde bare 3 grader).
+
+**Next session priority:** Test det nye designet i nettleser sammen med Magnus (`python3 -m http.server` i prosjektmappa) og juster detaljer han/kompisen reagerer på — deretter grusvei-transportetapper og gruveminne-POI-er.
+
+---
+
 ## Session — 2026-08-27 (prosjektstart: kart, Trailguide og Strava-nedfarter)
 
 **Worked on:**
