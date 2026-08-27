@@ -66,3 +66,21 @@
 - Telefonløypa rød bekreftet av Trailguide.
 - «Heimaten» finnes ikke på Trailguide — trolig feilhøring; «Sachsen 1» finnes
   heller ikke (bare 2 og 3).
+
+## 2026-08-27 (kveld, del 3) — MTB-turene funnet, St. Anger på kartet
+
+**Gjort:**
+- Full historikk-skanning av Strava (cursor-paginering tilbake til april 2022,
+  ~1000 aktiviteter). MTB-turene lå i 2022 — første skanning dekket bare
+  2024–2026, det var derfor de ikke dukket opp.
+- To ekte MTB-turer identifisert: «Mtb seasonstart» 2022-05-12 (Gule Sva,
+  Bergmannstien, Speiderroa 2, Gamle Korsvei DH, Ferdighetsløypa) og
+  «Lunch MTB» 2022-07-21 (St. Anger I+II, Gruvesafarien, Bakerommen,
+  Kamperhaug-Turisten).
+- Nedfartsdeteksjon på GPS-sporene, matchet mot alle 69 Trailguide-spor.
+- 2 nye ruter: **Gruveåsen (St. Anger)** 4,4 km rød + **Bakerommen** rød —
+  begge bekreftet syklet av Magnus.
+
+**Begrensninger oppdaget:**
+- Strava MCP har ikke segment-API (kun segmentnavn via aktiviteter);
+  segmentsider krever innlogging. Facebook-grupper kan ikke skannes (innlogging).

@@ -19,6 +19,8 @@ SELECTED = {
     2051: "gruvesafari.gpx",
     4532: "storaasen_afterbike.gpx",
     6201: "telefonlopa_helt_ned.gpx",
+    718: "gruvaasen_st_anger.gpx",
+    4527: "bakerommen.gpx",
 }
 
 trails = json.load(open(DATA))

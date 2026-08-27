@@ -64,6 +64,21 @@ const ROUTES = [
     description: "Afterbike-løypa på Storåsen. Fra Trailguide.",
   },
   {
+    file: "routes/gruvaasen_st_anger.gpx",
+    name: "Gruveåsen (St. Anger)",
+    difficulty: "rod",
+    description:
+      "4,4 km nedfart gjennom Gruveåsen — inneholder St. Anger-segmentene. " +
+      "Bekreftet syklet (MTB-tur 2022-07-21). Fra Trailguide.",
+  },
+  {
+    file: "routes/bakerommen.gpx",
+    name: "Bakerommen",
+    difficulty: "rod",
+    description:
+      "Nedfart 884 m. Bekreftet syklet (MTB-tur 2022-07-21). Fra Trailguide.",
+  },
+  {
     file: "routes/kommune_sykkelsti_1.gpx",
     name: "Sykkelrute på sti (kommunedata)",
     difficulty: "rod",
