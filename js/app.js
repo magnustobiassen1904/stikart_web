@@ -1,7 +1,7 @@
 // Stikart Kongsberg — kartlogikk
 
-const DIFF_COLORS = { gronn: "#2e8b57", rod: "#d63b3b", sort: "#1c1c1c" };
-const DIFF_LABELS = { gronn: "Grønn", rod: "Rød", sort: "Sort" };
+const DIFF_COLORS = { gronn: "#2e8b57", bla: "#2f6fd6", rod: "#d63b3b", sort: "#1c1c1c" };
+const DIFF_LABELS = { gronn: "Grønn", bla: "Blå", rod: "Rød", sort: "Sort" };
 
 // --- Kart og bakgrunnslag -------------------------------------------------
 

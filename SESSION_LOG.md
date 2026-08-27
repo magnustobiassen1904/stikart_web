@@ -53,3 +53,16 @@
 
 **Commits:**
 - (denne økta) Telefonløypa fra Strava + dekningskart
+
+## 2026-08-27 (kveld, del 2) — Nedfartene fra Trailguide
+
+**Gjort:**
+- Fant Trailguides åpne kart-API og hentet alle 69 spor rundt Kongsberg.
+  Snapshot i `data/trailguide_kongsberg.json`, konvertering i
+  `tools/trailguide_routes.py`.
+- 7 nye ruter i kartet: Gule Sva, Sachsen 2, Sachsen 3, Jernbordet
+  (Knutehytta–Sachsen), Gruvesafari, Storåsen Afterbike, Telefonløypa helt ned.
+- Ny vanskelighetsgrad «blå» (Trailguide bruker grønn/blå/rød/sort).
+- Telefonløypa rød bekreftet av Trailguide.
+- «Heimaten» finnes ikke på Trailguide — trolig feilhøring; «Sachsen 1» finnes
+  heller ikke (bare 2 og 3).
