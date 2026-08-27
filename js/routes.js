@@ -11,6 +11,15 @@
 
 const ROUTES = [
   {
+    file: "routes/telefonlopa.gpx",
+    name: "Telefonløypa",
+    difficulty: "rod",
+    description:
+      "Nedfart fra ca. 590 til 380 moh, 1,9 km. Ekte GPX fra Strava-løpetur " +
+      "2024-08-29, matchet mot OSM-stien Telefonløypa (mtb-grad 2). " +
+      "Vanskelighet foreløpig satt til rød — bekreft.",
+  },
+  {
     file: "routes/kommune_sykkelsti_1.gpx",
     name: "Sykkelrute på sti (kommunedata)",
     difficulty: "rod",
