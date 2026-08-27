@@ -1,0 +1,6 @@
+.DS_Store
+
+# Ikke-kode prosjektmateriale (lokalt, ikke til GitHub)
+brand/
+contracts/
+marketing/

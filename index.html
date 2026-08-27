@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html lang="no">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Stikart Kongsberg</title>
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+  <div id="sidebar">
+    <header>
+      <h1>Stikart Kongsberg</h1>
+      <p class="tagline">Sykkelstier i Gruveåsen og Knuteområdet</p>
+    </header>
+
+    <section class="filters">
+      <button class="chip active" data-diff="alle">Alle</button>
+      <button class="chip chip-gronn" data-diff="gronn">Grønn</button>
+      <button class="chip chip-rod" data-diff="rod">Rød</button>
+      <button class="chip chip-sort" data-diff="sort">Sort</button>
+    </section>
+
+    <section id="route-list"></section>
+
+    <section class="poi-toggles">
+      <h2>Punkter i terrenget</h2>
+      <label><input type="checkbox" id="poi-gapahuk" checked> Gapahuker</label>
+      <label><input type="checkbox" id="poi-baalplass"> Bålplasser</label>
+      <label><input type="checkbox" id="poi-benk"> Benker</label>
+      <label><input type="checkbox" id="poi-kommune"> Kommunens sykkelruter</label>
+    </section>
+
+    <footer>
+      <p>Kart: <a href="https://kartverket.no" target="_blank">Kartverket</a> /
+        <a href="https://openstreetmap.org" target="_blank">OpenStreetMap</a>.
+        Punktdata: Kongsberg kommune.</p>
+    </footer>
+  </div>
+
+  <div id="map"></div>
+
+  <div id="profile-panel" class="hidden">
+    <div class="profile-header">
+      <div>
+        <strong id="profile-name"></strong>
+        <span id="profile-stats"></span>
+      </div>
+      <button id="profile-close" title="Lukk">&times;</button>
+    </div>
+    <svg id="profile-svg" preserveAspectRatio="none"></svg>
+  </div>
+
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+  <script src="js/routes.js"></script>
+  <script src="js/app.js"></script>
+</body>
+</html>
