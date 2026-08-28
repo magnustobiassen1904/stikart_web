@@ -231,6 +231,19 @@ main { flex: 1; min-height: 0; display: flex; flex-direction: column; }
   border-radius: 0;
 }
 .legend-sep { height: 1px; background: rgba(31, 86, 136, 0.14); margin: 2px 0; }
+#legend-poi { display: flex; flex-direction: column; gap: 7px; }
+#legend-poi:empty { display: none; }
+#legend > div:has(+ #legend-poi:empty) { display: none; }
+.legend-dot {
+  width: 11px;
+  height: 11px;
+  border-radius: 50%;
+  border: 1.5px solid #fff;
+  box-shadow: 0 0 0 1px rgba(0, 0, 0, 0.08);
+  margin: 0 7px 0 6px;
+  flex-shrink: 0;
+}
+#detail-desc { font-size: 12.5px; color: var(--muted); line-height: 1.45; }
 
 /* Rutenavn-labels på kartlinjene */
 .route-label {

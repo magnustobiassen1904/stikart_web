@@ -65,6 +65,8 @@
           <div class="legend-sep"></div>
           <div><span class="legend-line legend-dash" style="color:#3a7d4e"></span>Transport på grus</div>
           <div><span class="legend-line legend-dash" style="color:#7a5a1d"></span>Skiheisen</div>
+          <div class="legend-sep"></div>
+          <div id="legend-poi"></div>
         </div>
 
         <div id="detail-card" class="hidden">
@@ -79,6 +81,7 @@
                 <button id="detail-close" title="Lukk">×</button>
               </span>
             </div>
+            <div id="detail-desc"></div>
             <svg id="detail-svg" preserveAspectRatio="none"></svg>
           </div>
         </div>
@@ -118,6 +121,11 @@
         <label class="poi-card"><input type="checkbox" id="poi-heis" checked><span class="poi-dot" style="background:#b3872e"></span> Skiheisen</label>
         <label class="poi-card"><input type="checkbox" id="poi-minnesmerke" checked><span class="poi-dot" style="background:#7a5a1d"></span> Minnesmerker (Korset m.fl.)</label>
         <label class="poi-card"><input type="checkbox" id="poi-gruveminne"><span class="poi-dot" style="background:#5d4037"></span> Gruveminner (271 gruver og sjakter)</label>
+        <label class="poi-card"><input type="checkbox" id="poi-utsikt" checked><span class="poi-dot" style="background:#7b4b94"></span> Utsiktspunkter</label>
+        <label class="poi-card"><input type="checkbox" id="poi-rast"><span class="poi-dot" style="background:#e08a00"></span> Raste- og spiseplasser</label>
+        <label class="poi-card"><input type="checkbox" id="poi-bad"><span class="poi-dot" style="background:#2a9dd6"></span> Badeplasser</label>
+        <label class="poi-card"><input type="checkbox" id="poi-vann"><span class="poi-dot" style="background:#16a5a3"></span> Drikkevann</label>
+        <label class="poi-card"><input type="checkbox" id="poi-parkering" checked><span class="poi-dot" style="background:#5a6673"></span> Parkering (gratis/betalt)</label>
       </div>
       <p class="stub-note">Punktene vises i Kart-fanen. Flere punkttyper (badeplass, fiskeplass) kommer.</p>
     </div>

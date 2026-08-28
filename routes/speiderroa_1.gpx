@@ -1,0 +1,46 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<gpx version="1.1" creator="stikart_web trailguide-snapshot" xmlns="http://www.topografix.com/GPX/1/1">
+ <trk><name>Speiderroa 1</name><desc>Fra Trailguide (trailguide.net), gradering: blue. 952 m, 41 m nedfart.</desc><trkseg>
+  <trkpt lat="59.688490" lon="9.606010"><ele>378.5</ele></trkpt>
+  <trkpt lat="59.688350" lon="9.606230"><ele>381.2</ele></trkpt>
+  <trkpt lat="59.688040" lon="9.606510"><ele>386.2</ele></trkpt>
+  <trkpt lat="59.687890" lon="9.606600"><ele>387.5</ele></trkpt>
+  <trkpt lat="59.687790" lon="9.606820"><ele>388.0</ele></trkpt>
+  <trkpt lat="59.687310" lon="9.607330"><ele>387.3</ele></trkpt>
+  <trkpt lat="59.687120" lon="9.607730"><ele>385.9</ele></trkpt>
+  <trkpt lat="59.686920" lon="9.607860"><ele>384.6</ele></trkpt>
+  <trkpt lat="59.686830" lon="9.608110"><ele>384.6</ele></trkpt>
+  <trkpt lat="59.686700" lon="9.608290"><ele>385.0</ele></trkpt>
+  <trkpt lat="59.686480" lon="9.608340"><ele>381.2</ele></trkpt>
+  <trkpt lat="59.686400" lon="9.608300"><ele>381.2</ele></trkpt>
+  <trkpt lat="59.686210" lon="9.608420"><ele>378.0</ele></trkpt>
+  <trkpt lat="59.686100" lon="9.608430"><ele>377.1</ele></trkpt>
+  <trkpt lat="59.685780" lon="9.608610"><ele>374.7</ele></trkpt>
+  <trkpt lat="59.685540" lon="9.609080"><ele>372.7</ele></trkpt>
+  <trkpt lat="59.685450" lon="9.609140"><ele>371.7</ele></trkpt>
+  <trkpt lat="59.685300" lon="9.609380"><ele>370.1</ele></trkpt>
+  <trkpt lat="59.685220" lon="9.609470"><ele>370.1</ele></trkpt>
+  <trkpt lat="59.685020" lon="9.609530"><ele>367.9</ele></trkpt>
+  <trkpt lat="59.684890" lon="9.609360"><ele>367.2</ele></trkpt>
+  <trkpt lat="59.684760" lon="9.609400"><ele>366.9</ele></trkpt>
+  <trkpt lat="59.684580" lon="9.609510"><ele>367.9</ele></trkpt>
+  <trkpt lat="59.684430" lon="9.609420"><ele>369.6</ele></trkpt>
+  <trkpt lat="59.684290" lon="9.609500"><ele>371.1</ele></trkpt>
+  <trkpt lat="59.684240" lon="9.609690"><ele>371.1</ele></trkpt>
+  <trkpt lat="59.684010" lon="9.609860"><ele>371.5</ele></trkpt>
+  <trkpt lat="59.683940" lon="9.610060"><ele>371.5</ele></trkpt>
+  <trkpt lat="59.683570" lon="9.610560"><ele>366.5</ele></trkpt>
+  <trkpt lat="59.683470" lon="9.610760"><ele>363.8</ele></trkpt>
+  <trkpt lat="59.683360" lon="9.610900"><ele>362.6</ele></trkpt>
+  <trkpt lat="59.682990" lon="9.610870"><ele>363.1</ele></trkpt>
+  <trkpt lat="59.682750" lon="9.610930"><ele>364.4</ele></trkpt>
+  <trkpt lat="59.682590" lon="9.611130"><ele>364.5</ele></trkpt>
+  <trkpt lat="59.682420" lon="9.611260"><ele>364.2</ele></trkpt>
+  <trkpt lat="59.682320" lon="9.611360"><ele>364.2</ele></trkpt>
+  <trkpt lat="59.681950" lon="9.611630"><ele>362.3</ele></trkpt>
+  <trkpt lat="59.681530" lon="9.611860"><ele>359.4</ele></trkpt>
+  <trkpt lat="59.681390" lon="9.611830"><ele>358.4</ele></trkpt>
+  <trkpt lat="59.681270" lon="9.611860"><ele>357.2</ele></trkpt>
+  <trkpt lat="59.681000" lon="9.612010"><ele>350.3</ele></trkpt>
+  <trkpt lat="59.680930" lon="9.612090"><ele>349.3</ele></trkpt>
+ </trkseg></trk></gpx>

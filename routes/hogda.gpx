@@ -1,0 +1,40 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<gpx version="1.1" creator="stikart_web trailguide-snapshot" xmlns="http://www.topografix.com/GPX/1/1">
+ <trk><name>Høgda</name><desc>Fra Trailguide (trailguide.net), gradering: blue. 566 m, 14 m nedfart.</desc><trkseg>
+  <trkpt lat="59.673730" lon="9.622290"><ele>330.0</ele></trkpt>
+  <trkpt lat="59.673650" lon="9.622270"><ele>330.0</ele></trkpt>
+  <trkpt lat="59.673560" lon="9.622200"><ele>331.0</ele></trkpt>
+  <trkpt lat="59.673540" lon="9.622130"><ele>331.0</ele></trkpt>
+  <trkpt lat="59.673460" lon="9.622040"><ele>332.0</ele></trkpt>
+  <trkpt lat="59.673440" lon="9.622050"><ele>332.0</ele></trkpt>
+  <trkpt lat="59.673330" lon="9.622010"><ele>334.0</ele></trkpt>
+  <trkpt lat="59.673150" lon="9.622060"><ele>336.0</ele></trkpt>
+  <trkpt lat="59.673070" lon="9.622100"><ele>336.0</ele></trkpt>
+  <trkpt lat="59.672920" lon="9.622020"><ele>337.0</ele></trkpt>
+  <trkpt lat="59.672790" lon="9.622050"><ele>335.0</ele></trkpt>
+  <trkpt lat="59.672670" lon="9.621960"><ele>335.0</ele></trkpt>
+  <trkpt lat="59.672600" lon="9.622010"><ele>335.0</ele></trkpt>
+  <trkpt lat="59.672480" lon="9.622200"><ele>336.0</ele></trkpt>
+  <trkpt lat="59.672420" lon="9.622230"><ele>336.0</ele></trkpt>
+  <trkpt lat="59.672360" lon="9.622290"><ele>337.0</ele></trkpt>
+  <trkpt lat="59.672000" lon="9.622420"><ele>337.0</ele></trkpt>
+  <trkpt lat="59.671890" lon="9.622490"><ele>337.0</ele></trkpt>
+  <trkpt lat="59.671740" lon="9.622700"><ele>338.0</ele></trkpt>
+  <trkpt lat="59.671450" lon="9.623000"><ele>342.0</ele></trkpt>
+  <trkpt lat="59.671370" lon="9.623140"><ele>343.0</ele></trkpt>
+  <trkpt lat="59.671300" lon="9.623220"><ele>343.0</ele></trkpt>
+  <trkpt lat="59.671250" lon="9.623180"><ele>343.0</ele></trkpt>
+  <trkpt lat="59.671190" lon="9.623230"><ele>343.0</ele></trkpt>
+  <trkpt lat="59.671110" lon="9.623440"><ele>342.0</ele></trkpt>
+  <trkpt lat="59.670930" lon="9.623740"><ele>342.0</ele></trkpt>
+  <trkpt lat="59.670640" lon="9.624280"><ele>342.0</ele></trkpt>
+  <trkpt lat="59.670530" lon="9.624350"><ele>341.0</ele></trkpt>
+  <trkpt lat="59.670390" lon="9.624380"><ele>341.0</ele></trkpt>
+  <trkpt lat="59.670060" lon="9.624670"><ele>339.0</ele></trkpt>
+  <trkpt lat="59.669840" lon="9.624820"><ele>338.0</ele></trkpt>
+  <trkpt lat="59.669730" lon="9.624870"><ele>337.0</ele></trkpt>
+  <trkpt lat="59.669670" lon="9.624980"><ele>336.0</ele></trkpt>
+  <trkpt lat="59.669600" lon="9.625030"><ele>335.0</ele></trkpt>
+  <trkpt lat="59.669450" lon="9.625230"><ele>332.0</ele></trkpt>
+  <trkpt lat="59.669280" lon="9.625590"><ele>326.0</ele></trkpt>
+ </trkseg></trk></gpx>

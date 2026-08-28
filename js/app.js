@@ -123,7 +123,16 @@ function metaLine(route, stats) {
 function exaggeratedEles(pts, factor) {
   const n = pts.length;
   const win = Math.max(5, Math.floor(n * 0.08));
-  const eles = pts.map((p) => p.ele);
+  // Trailguide-høyder er grovt kvantisert — glatt lett før forsterkning,
+  // ellers blir kvantiseringstrinnene til hakkete klipper i profilen
+  const raw = pts.map((p) => p.ele);
+  const eles = raw.map((_, i) => {
+    const lo = Math.max(0, i - 2);
+    const hi = Math.min(n, i + 3);
+    let s = 0;
+    for (let j = lo; j < hi; j++) s += raw[j];
+    return s / (hi - lo);
+  });
   const out = new Array(n);
   for (let i = 0; i < n; i++) {
     const lo = Math.max(0, i - win);
@@ -418,14 +427,25 @@ function removeHoverMarker() {
   }
 }
 
+// Profilhøyden skaleres etter reell bratthet (vertikal overdrivelse ×1.6, maks
+// full boks) — slik at en slak grusvei faktisk ser slakere ut enn en bratt nedfart
+const PROFILE_EXAG = 1.6;
+function profileScale(entry, w, usable) {
+  const total = entry.stats.cum[entry.stats.cum.length - 1] || 1;
+  const span = entry.stats.maxEle - entry.stats.minEle;
+  return Math.min(1, (PROFILE_EXAG * span * w) / (total * usable));
+}
+
 function profileXY(entry, i) {
   const { stats } = entry;
   const total = stats.cum[stats.cum.length - 1] || 1;
   const x = PROFILE_PAD + (stats.cum[i] / total) * (PROFILE_W - 2 * PROFILE_PAD);
+  const usable = PROFILE_H - 26 - PROFILE_PAD;
+  const scale = profileScale(entry, PROFILE_W - 2 * PROFILE_PAD, usable);
   const y =
     PROFILE_H -
     PROFILE_PAD -
-    ((entry.disp[i] - entry.dispMin) / entry.dispSpan) * (PROFILE_H - 26 - PROFILE_PAD);
+    ((entry.disp[i] - entry.dispMin) / entry.dispSpan) * usable * scale;
   return [x, y];
 }
 
@@ -441,6 +461,7 @@ function showDetail(entry) {
   const gpx = document.getElementById("detail-gpx");
   gpx.href = route.file;
   gpx.download = route.file.split("/").pop();
+  document.getElementById("detail-desc").textContent = route.description || "";
 
   detailCard.classList.remove("hidden");
   PROFILE_W = Math.max(detailSvg.clientWidth || 700, 300);
@@ -525,9 +546,11 @@ function miniProfileSvg(entry, w, h) {
   const step = Math.max(1, Math.floor(pts.length / 120));
   const idxs = [];
   for (let i = 0; i < pts.length; i += step) idxs.push(i);
+  const usable = h - 8;
+  const scale = profileScale(entry, w, usable);
   const xy = (i) => {
     const x = (stats.cum[i] / total) * w;
-    const y = h - 3 - ((entry.disp[i] - entry.dispMin) / entry.dispSpan) * (h - 8);
+    const y = h - 3 - ((entry.disp[i] - entry.dispMin) / entry.dispSpan) * usable * scale;
     return `${x.toFixed(1)},${y.toFixed(1)}`;
   };
   const area = idxs.map(xy).join(" ");
@@ -730,6 +753,15 @@ const poiLayers = {
     (p) => `<b>${p.name}</b>` + (p.sub ? `<br>${p.sub}` : "")
   ),
   "poi-gruveminne": poiLayer("data/gruveminner.geojson", "#5d4037", (p) => p.name, 4),
+  "poi-utsikt": poiLayer("data/utsiktspunkt.geojson", "#7b4b94", (p) => p.name),
+  "poi-rast": poiLayer("data/rasteplass.geojson", "#e08a00", (p) => p.name, 4),
+  "poi-bad": poiLayer("data/badeplass.geojson", "#2a9dd6", (p) => p.name),
+  "poi-vann": poiLayer("data/drikkevann.geojson", "#16a5a3", (p) => p.name),
+  "poi-parkering": poiLayer(
+    "data/parkering.geojson",
+    "#5a6673",
+    (p) => `<b>${p.name}</b>` + (p.sub ? `<br>${p.sub}` : "")
+  ),
 };
 
 // Kommunens merkede sykkelruter som eget referanselag (stiplet blå)
@@ -776,14 +808,33 @@ fetch("data/heis.geojson")
   .catch((err) => console.error("Klarte ikke laste heisen", err));
 poiLayers["poi-heis"] = heisLayer;
 
+// Kartlegenden viser prikk-forklaring for de punktlagene som er slått på
+function updatePoiLegend() {
+  const holder = document.getElementById("legend-poi");
+  holder.innerHTML = "";
+  for (const id of Object.keys(poiLayers)) {
+    if (id === "poi-heis" || id === "poi-kommune") continue; // linjelag — har egne rader
+    const box = document.getElementById(id);
+    if (!box || !box.checked) continue;
+    const card = box.closest(".poi-card");
+    const color = card.querySelector(".poi-dot").style.background;
+    const label = card.textContent.trim().replace(/\s*\(.*\)$/, "");
+    const row = document.createElement("div");
+    row.innerHTML = `<span class="legend-dot" style="background:${color}"></span>${label}`;
+    holder.appendChild(row);
+  }
+}
+
 for (const [id, layer] of Object.entries(poiLayers)) {
   const box = document.getElementById(id);
   if (box.checked) layer.addTo(map);
   box.addEventListener("change", () => {
     if (box.checked) layer.addTo(map);
     else map.removeLayer(layer);
+    updatePoiLegend();
   });
 }
+updatePoiLegend();
 
 // --- Init ------------------------------------------------------------------
 
