@@ -699,7 +699,7 @@ dropzone.addEventListener("drop", (ev) => {
 
 // --- Punkter fra kommunens data -------------------------------------------
 
-function poiLayer(url, color, labelFn) {
+function poiLayer(url, color, labelFn, radius = 6) {
   const group = L.layerGroup();
   fetch(url)
     .then((r) => r.json())
@@ -707,7 +707,7 @@ function poiLayer(url, color, labelFn) {
       L.geoJSON(geojson, {
         pointToLayer: (ft, latlng) =>
           L.circleMarker(latlng, {
-            radius: 6,
+            radius,
             fillColor: color,
             fillOpacity: 0.9,
             color: "#fff",
@@ -723,6 +723,13 @@ const poiLayers = {
   "poi-gapahuk": poiLayer("data/gapahuk.geojson", "#3a7d4e", (p) => p.NAVN || "Gapahuk"),
   "poi-baalplass": poiLayer("data/baalplass.geojson", "#b3872e", (p) => p.NAVN || "Bålplass"),
   "poi-benk": poiLayer("data/sittebenk.geojson", "#1f5688", (p) => p.NAVN || "Benk"),
+  // Fra OSM: Korset m.fl. + navngitte gruver/sjakter i stiområdet
+  "poi-minnesmerke": poiLayer(
+    "data/minnesmerker.geojson",
+    "#7a5a1d",
+    (p) => `<b>${p.name}</b>` + (p.sub ? `<br>${p.sub}` : "")
+  ),
+  "poi-gruveminne": poiLayer("data/gruveminner.geojson", "#5d4037", (p) => p.name, 4),
 };
 
 // Kommunens merkede sykkelruter som eget referanselag (stiplet blå)
