@@ -1,6 +1,50 @@
 # SESSION_LOG — stikart_web
 
 
+## Session — 2026-08-28 (UX-pakke: bratthetsprofiler, rutenavn på kartet, transportetapper, skiheisen)
+
+**Worked on:**
+- Fullførte høydeprofil-detaljene fra natta: jevne nedfarter ble rette streker — nå forsterkes lokale variasjoner (×2,5 rundt trenden) så kuler/sva synes; tooltip/statistikk viser fortsatt ekte høyder.
+- Bratthetsfargede profiler (detaljkort + minigrafer): ekte helning målt over ±60 m, grønn <7 % / gull 7–14 % / rød 14–22 % / sort >22 %. Forklaring i detaljkortet.
+- Smooth zoom: `flyToBounds` (0,9 s) ved rutevalg i stedet for hopp.
+- Rutenavn som labels på kartlinjene (hvite piller med graderingsprikk, vises fra zoom 13, følger filtrene). Implementert med Leaflet permanent-tooltips, `.route-label` i CSS.
+- 3 nye ruter fra Trailguide-snapshotten (sequence i `tools/trailguide_routes.py`): Bergmannsstien (4524, rød), Knuteveien (6203) og Gamle Korsvei til Korset (4534) som transportetapper.
+- Transportetapper har `transport: true` i `js/routes.js` → prikket linje (dashArray "1 10"), tynnere, egen rad i tegnforklaringen.
+- Skiheisen: ekte trase hentet fra OSM (way 28350413, stolheisen Funkelia→toppen) → `data/heis.geojson`; gull prikkelinje med endepunkter + label; av/på-toggle under Punkter (på som standard).
+
+**Progress:** Kartet har nå 13 ruter (10 nedfarter + Bergmannsstien + 2 transportetapper) pluss heisen. Hele UX-ønskelista fra Magnus' melding er levert, verifisert med headless Chrome-skjermbilder, pushet.
+
+**Key decisions:**
+- Bratthetsgrensene 7/14/22 % er skjønn — én linje å justere (`SLOPE_COLORS` i `js/app.js`) hvis kompisen mener noe annet.
+- Ingen nye libraries — Leaflet + egen SVG-logikk dekket alt.
+- Transportetapper beholder grønn gradering i filtrene (ikke egen kategori), men skilles visuelt med prikking.
+- Rutenavn-labels bruker kortnavn (parentes-suffiks strippes).
+
+**Open task list (carry forward):**
+- [x] Redesign 4a/4b implementert (forrige økt)
+- [x] Detaljerte + bratthetsfargede høydeprofiler
+- [x] Smooth zoom, rutenavn på kartet
+- [x] Bergmannsstien, Knuteveien + Korsveien (transport), skiheisen
+- [ ] Vis kartet til kompisen — bekreft navn/gradering (spesielt «Heimaten» og «Sachsen 1») + bratthetsgrensene
+- [ ] POI: Korset og monumenter/gruveminner (+ badeplass/fiskeplass)
+- [ ] Vurder å bytte Trailguide-geometri mot Magnus' egne kjørte spor (Gule Sva, Gruvesafari 2022)
+- [ ] GitHub Pages-hosting
+- [ ] «Ruteplanlegger»-knappen er stubb (peker til Om)
+- [ ] Ekte foto av stiene til detaljkortet (placeholder-striper nå)
+- [ ] Mobiltilpasning er grov — test på telefon
+
+**Git commits:**
+- 0477bd2 UX-pakke: smooth zoom, rutenavn på kartet, bratthetsfargede høydeprofiler + Bergmannsstien, transportetapper (Knuteveien/Korsveien) og skiheisen
+- d08e233 Sesjonlogg: redesign-økta
+- 0809ba4 Redesign fra Claude Design (runde 4): faner, Kongsberg-palett, Ruter-galleri med minikart, interaktiv høydeprofil; kommune-sampleruter fjernet
+(+ nattøkta 27.08: 1c5b684 og eldre — se forrige oppføring)
+
+**Blockers / open questions:** Ingen tekniske. Navneavklaring («Heimaten», «Sachsen 1») og graderinger venter fortsatt på kompisen.
+
+**Next session priority:** Vis kartet til kompisen (navn, graderinger, bratthetsgrenser) — deretter Korset/gruveminne-POI-er fra kommunedata/OSM og GitHub Pages-hosting så kompisen kan åpne siden via lenke.
+
+---
+
 ## Session — 2026-08-27 (natt: redesign implementert fra Claude Design)
 
 **Worked on:**
