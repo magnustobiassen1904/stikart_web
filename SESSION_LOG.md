@@ -1,6 +1,58 @@
 # SESSION_LOG — stikart_web
 
 
+## Session — 2026-08-28 (dag: research-og-utvidelsesøkta — 46 ruter, riktig Korsvei, POI-pakke, brukerundersøkelse)
+
+**Worked on:**
+- Session-start: GitHub Pages viste seg å allerede være aktiv — lenken til kompisen er https://magnustobiassen1904.github.io/stikart_web/ (verifisert at siste versjon serveres).
+- Korsveien var FEIL trasé (fulgte skogsstien «Gamle Korsvei»). Ny: selve grusveien Korsveien fra OSM (by → tvers gjennom slalåmbakken → Korset-monumentet), høyder fra Kartverkets høyde-API. Nytt verktøy `tools/korsveien_fra_osm.py`.
+- Seleksjons-UX: klikkbare navnepiller, usynlig 24 px klikkflate på alle linjer, klikk i tomt kart deselecter, «(transport opp)» fjernet fra navn, hint-tekst fjernet, tegnforklaring redesignet (uten tankestreker) + dynamisk prikk-forklaring for påslåtte punktlag.
+- Research: Trailguide-snapshotten (53 ubrukte stier), terrengsykkel.no-stiguidene, OSM-stinavn. Forslagsliste levert, Magnus ga go på nesten alt.
+- 30 nye Trailguide-ruter: Knoffemyr-trioen, Helvetesdalen, Justitsen, Tømmer-renna, Saggrenda spesial, Malmkleiva, Henchensetra, Sachsen–Granatdammen, Speiderroa 1–3 + «Opp til Speiderroa», Storåsen-småstiene, Briskemyrrunden + HELE østsiden (Lailastien, Langevannstoppen ± klatring, Langevann Enduro, Langevannskleiva, Kampestad, Kampestad travers (første SORTE), Fugleplassen ± øvre, Sulusåsen, AFC).
+- 3 OSM-bygde ruter (nytt verktøy `tools/osm_stier.py` + graf-søk over stinettet): Eriksløypa (Knutehytta→Sachsen, guide-tekst fra terrengsykkel.no), Heimaten-KANDIDAT (Rundtjern→langs kanten→Funkelia, merket «ubekreftet trasé»), Funkelia til Korsveien (parkeringen→tavla→grusveien).
+- Høydeprofiler: glatting før forsterkning (fikset Bakerommen-hakkingen) + profilhøyde skalert etter reell bratthet (`PROFILE_EXAG=1.6` i js/app.js) — slake ruter ser nå slake ut.
+- Detaljkortet viser rutebeskrivelsen (guide-tips fra terrengsykkel.no flettet inn i Gule Sva, Bergmannsstien, Bakerommen/Gorms Surprise, Eriksløypa).
+- Punkter: minnesmerker (Korset m. historie, Kronprins Fredriks stoll), 271 navngitte gruveminner, 23 utsiktspunkter, 170 raste-/spiseplasser, 4 badeplasser, 4 drikkevann, 54 parkeringer med gratis/betalt (filtrert til turstartene).
+- `produkt/`-mappe (gitignorert): `brukerundersokelse.md` (12 spørsmål + FB-post + personvernnotat), `lag_undersokelse.gs` (Apps Script som BYGGER hele Google-skjemaet automatisk — lim inn på script.google.com og kjør, lenkene kommer i loggen) og `fremtidig_funksjonalitet.md` (idébank til Notion-kanbanen).
+
+**Progress:** Kartet gikk fra 13 til 46 ruter (grønn 6 / blå 20 / rød 19 / sort 1) og dekker nå begge sider av byen. Alt pushet og live.
+
+**Key decisions:**
+- «Også ned til Funkelia» tolket som EGEN grønn etappe (Funkelia til Korsveien) i stedet for å flytte by-ruta — flagget til Magnus for bekreftelse.
+- Heimaten bygget som beste gjetning fra graf-søk etter Magnus' beskrivelse; tydelig merket ubekreftet i navn + beskrivelse.
+- Parkering filtrert til turstart-relevante (lon < 9.632 eller lat > 59.680) for å slippe sentrumsstøy.
+- Produktdokumenter i `produkt/` er gitignorert (konvensjon: ikke-kode lokalt).
+- Google Forms kan ikke opprettes direkte av Claude — løst med Apps Script (produkt/lag_undersokelse.gs) som bygger skjemaet på Magnus' konto med ett klikk. NB: siste spørsmål samler frivillig e-post (persondata) — personvernnotat ligger i brukerundersokelse.md.
+
+**Open task list (carry forward):**
+- [x] GitHub Pages-hosting (var allerede aktiv — lenke verifisert)
+- [x] Korsvei-trasé rettet + forlenget til Funkelia (egen etappe)
+- [x] POI: Korset/minnesmerker/gruveminner + utsikt/rast/bad/vann/parkering
+- [x] 33 nye ruter (Trailguide + OSM) inkl. østsiden
+- [x] Rutebeskrivelser i detaljkort + POI-legend
+- [x] Brukerundersøkelse-utkast + idébank skrevet
+- [ ] Magnus: kjøre produkt/lag_undersokelse.gs på script.google.com (bygger skjemaet automatisk) og poste svarlenken i FB-grupper (les personvernnotatet i brukerundersokelse.md først)
+- [ ] Vis kartet til kompisen — bekreft navn/graderinger (spesielt Heimaten-traseen, «Sachsen 1», Gorms Surprise/Bakerommen) + bratthetsgrenser
+- [ ] Magnus: bekrefte at «Funkelia til Korsveien» som egen etappe var riktig tolkning
+- [ ] Flytte produkt/fremtidig_funksjonalitet.md inn i Notion-kanbanen
+- [ ] Oppdatere undertittel «Gruveåsen og Knuteområdet» (dekker nå også østsiden)
+- [ ] Vurder å bytte Trailguide-geometri mot Magnus' egne kjørte spor (Gule Sva, Gruvesafari 2022)
+- [ ] «Ruteplanlegger»-knappen er stubb (peker til Om)
+- [ ] Ekte foto av stiene til detaljkortet (placeholder-striper nå)
+- [ ] Mobiltilpasning er grov — test på telefon
+- [ ] Ev. flere OSM-stier: Knuten rundt, Ollebakkene, Kløvstadløypa, Argentitten (godkjent «bygg en del nytt», ikke bygget ennå)
+
+**Git commits:**
+- d46ca2b Stor utvidelse: 33 nye ruter (Gruveåsen + hele østsiden), Eriksløypa/Heimaten/Funkelia-kobling fra OSM, 5 nye punkttyper inkl. parkering, POI-legend, rutebeskrivelser i detaljkortet, bratthetsskalerte og glattede høydeprofiler
+- c24d5f0 Punkter: minnesmerker (Korset, Kronprins Fredriks stoll) og 271 navngitte gruveminner fra OSM
+- 969af2e Riktig Korsvei-trasé (OSM-grusvei gjennom slalåmbakken, Kartverket-høyder), klikkbare rutenavn, bred klikkflate, deselect ved kartklikk, renere tegnforklaring
+
+**Blockers / open questions:** Heimaten-traseen og Funkelia-tolkningen venter på Magnus/kompisen. «Heimaten» og «Sachsen 1» finnes fortsatt ikke i noen kilde ved navn.
+
+**Next session priority:** Magnus kjører produkt/lag_undersokelse.gs (skjemaet bygges automatisk, lenker i loggen) og viser kartet til kompisen (Heimaten-trasé, graderinger, bratthetsgrenser) — Claude retter det som kommer av feedback, og bygger ev. resterende OSM-stier (Knuten rundt, Ollebakkene, Kløvstadløypa, Argentitten).
+
+---
+
 ## Session — 2026-08-28 (UX-pakke: bratthetsprofiler, rutenavn på kartet, transportetapper, skiheisen)
 
 **Worked on:**
