@@ -136,12 +136,16 @@ function exaggeratedEles(pts, factor) {
   return out;
 }
 
+let lastSelectAt = 0; // skiller ruteklikk fra «klikk i tomt kart» (samme DOM-event når map-click fyrer etterpå)
+
 function selectRoute(entry) {
+  lastSelectAt = performance.now();
   if (selected) selected.layer.setStyle(baseStyle(selected.route));
   selected = entry;
   entry.layer.setStyle({ weight: entry.route.transport ? 5 : 6.5, opacity: 1 });
   entry.halo.bringToFront();
   entry.layer.bringToFront();
+  entry.hit.bringToFront();
   map.flyToBounds(entry.layer.getBounds(), { padding: [60, 60], duration: 0.9 });
   showDetail(entry);
   document
@@ -160,7 +164,11 @@ function registerRoute(route, pts) {
     lineCap: "round",
   }).addTo(map);
   const layer = L.polyline(latlngs, baseStyle(route)).addTo(map);
-  const entry = { route, layer, halo, pts, stats };
+  // Usynlig, bred linje oppå — gjør ruta mye lettere å treffe med musa
+  const hit = L.polyline(latlngs, { color: "#000", opacity: 0, weight: 24, lineCap: "round" }).addTo(
+    map
+  );
+  const entry = { route, layer, halo, hit, pts, stats };
   const mid = pts[Math.floor(pts.length / 2)];
   entry.label = L.tooltip({
     permanent: true,
@@ -177,8 +185,8 @@ function registerRoute(route, pts) {
   entry.disp = exaggeratedEles(pts, 2.5);
   entry.dispMin = Math.min(...entry.disp);
   entry.dispSpan = Math.max(Math.max(...entry.disp) - entry.dispMin, 10);
-  layer.on("click", () => selectRoute(entry));
-  layer.bindTooltip(route.name, { sticky: true });
+  hit.on("click", () => selectRoute(entry));
+  hit.bindTooltip(route.name, { sticky: true });
 
   // Kort i venstremenyen
   const card = document.createElement("div");
@@ -249,10 +257,13 @@ function applyFilters() {
     if (show) {
       entry.halo.addTo(map);
       entry.layer.addTo(map);
+      entry.hit.addTo(map);
       entry.layer.bringToFront();
+      entry.hit.bringToFront();
     } else {
       map.removeLayer(entry.layer);
       map.removeLayer(entry.halo);
+      map.removeLayer(entry.hit);
     }
     entry.card.style.display = show ? "" : "none";
     entry.gridCard.style.display = show ? "" : "none";
@@ -266,11 +277,30 @@ function updateLabels() {
   const zoomedIn = map.getZoom() >= LABEL_MIN_ZOOM;
   for (const entry of routeLayers) {
     const on = zoomedIn && entryVisible(entry);
-    if (on && !map.hasLayer(entry.label)) entry.label.addTo(map);
+    if (on && !map.hasLayer(entry.label)) {
+      entry.label.addTo(map);
+      wireLabel(entry);
+    }
     if (!on && map.hasLayer(entry.label)) entry.label.remove();
   }
 }
 map.on("zoomend", updateLabels);
+
+// Navnepillene er også klikkbare — velger ruta
+function wireLabel(entry) {
+  const el = entry.label.getElement();
+  if (!el || el.dataset.wired) return;
+  el.dataset.wired = "1";
+  el.addEventListener("click", (ev) => {
+    ev.stopPropagation();
+    selectRoute(entry);
+  });
+}
+
+// Klikk i tomt kart lukker valgt rute (ruteklikk fyrer map-click rett etter selectRoute — ignorér de)
+map.on("click", () => {
+  if (selected && performance.now() - lastSelectAt > 250) closeDetail();
+});
 
 function updateCounts() {
   const counts = { alle: routeLayers.length, gronn: 0, bla: 0, rod: 0, sort: 0 };

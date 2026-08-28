@@ -58,12 +58,13 @@
         <div id="map"></div>
 
         <div id="legend">
-          <div><span class="legend-line" style="background:#3a7d4e"></span>Grønn — enkel</div>
-          <div><span class="legend-line" style="background:#2b6fb5"></span>Blå — middels</div>
-          <div><span class="legend-line" style="background:#c03b2d"></span>Rød — krevende</div>
-          <div><span class="legend-line" style="background:#1b1f24"></span>Sort — ekspert</div>
-          <div><span class="legend-line" style="background:repeating-linear-gradient(90deg,#3a7d4e 0 4px,transparent 4px 9px)"></span>Transport (grus)</div>
-          <div><span class="legend-line" style="background:repeating-linear-gradient(90deg,#7a5a1d 0 4px,transparent 4px 9px)"></span>Skiheisen</div>
+          <div><span class="legend-line" style="background:#3a7d4e"></span>Enkel</div>
+          <div><span class="legend-line" style="background:#2b6fb5"></span>Middels</div>
+          <div><span class="legend-line" style="background:#c03b2d"></span>Krevende</div>
+          <div><span class="legend-line" style="background:#1b1f24"></span>Ekspert</div>
+          <div class="legend-sep"></div>
+          <div><span class="legend-line legend-dash" style="color:#3a7d4e"></span>Transport på grus</div>
+          <div><span class="legend-line legend-dash" style="color:#7a5a1d"></span>Skiheisen</div>
         </div>
 
         <div id="detail-card" class="hidden">
@@ -79,11 +80,6 @@
               </span>
             </div>
             <svg id="detail-svg" preserveAspectRatio="none"></svg>
-            <div class="detail-hint">Pek på grafen for høyde underveis — punktet følger med på kartlinja.
-              Farge = bratthet: <span style="color:#3a7d4e;font-weight:600">slak</span> ·
-              <span style="color:#b3872e;font-weight:600">middels</span> ·
-              <span style="color:#c03b2d;font-weight:600">bratt</span> ·
-              <span style="color:#1b1f24;font-weight:600">svært bratt</span></div>
           </div>
         </div>
       </div>

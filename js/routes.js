@@ -87,16 +87,18 @@ const ROUTES = [
   },
   {
     file: "routes/knuteveien.gpx",
-    name: "Knuteveien (transport opp)",
+    name: "Knuteveien",
     difficulty: "gronn",
     transport: true,
     description: "Grusvei-klatring 8,9 km / 573 hm opp til Knutefjell. Fra Trailguide.",
   },
   {
     file: "routes/korsveien.gpx",
-    name: "Gamle Korsvei til Korset (transport opp)",
+    name: "Korsveien til Korset",
     difficulty: "gronn",
     transport: true,
-    description: "Grusvei-klatring 3,5 km / 311 hm opp til Korset. Fra Trailguide.",
+    description:
+      "Transport opp: grusveien fra byen, tvers gjennom slalåmbakken og opp til " +
+      "Korset-monumentet. 3,9 km / ca. 190 hm. Geometri fra OSM, høyder fra Kartverket.",
   },
 ];

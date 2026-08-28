@@ -23,21 +23,12 @@ SELECTED = {
     4527: "bakerommen.gpx",
     4524: "bergmannsstien.gpx",
     6203: "knuteveien.gpx",
-    4534: "korsveien.gpx",
 }
 
 trails = json.load(open(DATA))
-for t in trails:
-    seq = t.get("sequence")
-    if seq not in SELECTED:
-        continue
-    name = t["name"]["def"].strip()
-    pts = t["latlng"]["points"]
-    alt = t.get("altitude", {})
-    desc = (
-        f"Fra Trailguide (trailguide.net), gradering: {t.get('color')}. "
-        f"{t.get('meters', '?')} m, {alt.get('descent', '?')} m nedfart."
-    )
+
+
+def write_gpx(filename, name, desc, pts):
     lines = [
         '<?xml version="1.0" encoding="UTF-8"?>',
         '<gpx version="1.1" creator="stikart_web trailguide-snapshot" xmlns="http://www.topografix.com/GPX/1/1">',
@@ -47,6 +38,21 @@ for t in trails:
         ele = f'<ele>{p["alt"]:.1f}</ele>' if p.get("alt") is not None else ""
         lines.append(f'  <trkpt lat="{p["lat"]:.6f}" lon="{p["lng"]:.6f}">{ele}</trkpt>')
     lines.append(" </trkseg></trk></gpx>")
-    out = os.path.join(ROUTES, SELECTED[seq])
-    open(out, "w").write("\n".join(lines))
-    print(f"{SELECTED[seq]}: {name} ({len(pts)} pkt, {t.get('color')})")
+    open(os.path.join(ROUTES, filename), "w").write("\n".join(lines))
+    print(f"{filename}: {name} ({len(pts)} pkt)")
+
+
+for t in trails:
+    seq = t.get("sequence")
+    if seq not in SELECTED:
+        continue
+    name = t["name"]["def"].strip()
+    alt = t.get("altitude", {})
+    desc = (
+        f"Fra Trailguide (trailguide.net), gradering: {t.get('color')}. "
+        f"{t.get('meters', '?')} m, {alt.get('descent', '?')} m nedfart."
+    )
+    write_gpx(SELECTED[seq], name, desc, t["latlng"]["points"])
+
+# korsveien.gpx lages IKKE her — grusveien gjennom slalåmbakken kommer fra OSM,
+# se tools/korsveien_fra_osm.py. (Trailguides «Korsvei»-spor følger andre traséer.)
