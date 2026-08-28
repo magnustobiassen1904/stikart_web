@@ -227,6 +227,27 @@ main { flex: 1; min-height: 0; display: flex; flex-direction: column; }
 #legend div { display: flex; align-items: center; gap: 8px; }
 .legend-line { width: 22px; height: 4px; border-radius: 2px; }
 
+/* Rutenavn-labels på kartlinjene */
+.route-label {
+  background: rgba(252, 254, 255, 0.95);
+  border: none;
+  border-radius: 999px;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.12);
+  padding: 3px 9px;
+  font-family: var(--font-body);
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--ink);
+}
+.route-label::before { display: none; }
+.label-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 999px;
+  display: inline-block;
+  margin-right: 5px;
+}
+
 /* ---- Detaljkort ------------------------------------------------------ */
 
 #detail-card {

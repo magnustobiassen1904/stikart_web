@@ -78,4 +78,25 @@ const ROUTES = [
     description:
       "Nedfart 884 m. Bekreftet syklet (MTB-tur 2022-07-21). Fra Trailguide.",
   },
+  {
+    file: "routes/bergmannsstien.gpx",
+    name: "Bergmannsstien",
+    difficulty: "rod",
+    description:
+      "Nedfart 1,8 km. Bekreftet syklet (MTB-tur 2022-05-12). Fra Trailguide.",
+  },
+  {
+    file: "routes/knuteveien.gpx",
+    name: "Knuteveien (transport opp)",
+    difficulty: "gronn",
+    transport: true,
+    description: "Grusvei-klatring 8,9 km / 573 hm opp til Knutefjell. Fra Trailguide.",
+  },
+  {
+    file: "routes/korsveien.gpx",
+    name: "Gamle Korsvei til Korset (transport opp)",
+    difficulty: "gronn",
+    transport: true,
+    description: "Grusvei-klatring 3,5 km / 311 hm opp til Korset. Fra Trailguide.",
+  },
 ];

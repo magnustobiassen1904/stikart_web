@@ -99,7 +99,13 @@ let selected = null;
 let hoverMarker = null;
 
 function baseStyle(route) {
-  return { color: DIFF_COLORS[route.difficulty], weight: 4.5, opacity: 0.95 };
+  return {
+    color: DIFF_COLORS[route.difficulty],
+    weight: route.transport ? 3.5 : 4.5,
+    opacity: 0.95,
+    dashArray: route.transport ? "1 10" : null,
+    lineCap: "round",
+  };
 }
 
 // Nedfarter har nesten null stigning — bruk største av stigning/fall som høydemeter
@@ -111,13 +117,32 @@ function metaLine(route, stats) {
   return `${DIFF_LABELS[route.difficulty]} · ${stats.km.toFixed(1).replace(".", ",")} km · ${hmOf(stats)} hm`;
 }
 
+// Profilkurvene tegner lokale variasjoner forsterket (x2.5) rundt trenden —
+// en jevn nedfart blir ellers en rett strek der kuler og sva drukner.
+// Tooltip og statistikk bruker alltid ekte høyder.
+function exaggeratedEles(pts, factor) {
+  const n = pts.length;
+  const win = Math.max(5, Math.floor(n * 0.08));
+  const eles = pts.map((p) => p.ele);
+  const out = new Array(n);
+  for (let i = 0; i < n; i++) {
+    const lo = Math.max(0, i - win);
+    const hi = Math.min(n, i + win + 1);
+    let s = 0;
+    for (let j = lo; j < hi; j++) s += eles[j];
+    const trend = s / (hi - lo);
+    out[i] = trend + factor * (eles[i] - trend);
+  }
+  return out;
+}
+
 function selectRoute(entry) {
   if (selected) selected.layer.setStyle(baseStyle(selected.route));
   selected = entry;
-  entry.layer.setStyle({ weight: 6.5, opacity: 1 });
+  entry.layer.setStyle({ weight: entry.route.transport ? 5 : 6.5, opacity: 1 });
   entry.halo.bringToFront();
   entry.layer.bringToFront();
-  map.fitBounds(entry.layer.getBounds(), { padding: [40, 40] });
+  map.flyToBounds(entry.layer.getBounds(), { padding: [60, 60], duration: 0.9 });
   showDetail(entry);
   document
     .querySelectorAll(".route-card")
@@ -131,9 +156,27 @@ function registerRoute(route, pts) {
     color: HALO_COLOR,
     weight: 9,
     opacity: 1,
+    dashArray: route.transport ? "1 10" : null,
+    lineCap: "round",
   }).addTo(map);
   const layer = L.polyline(latlngs, baseStyle(route)).addTo(map);
   const entry = { route, layer, halo, pts, stats };
+  const mid = pts[Math.floor(pts.length / 2)];
+  entry.label = L.tooltip({
+    permanent: true,
+    direction: "top",
+    className: "route-label",
+    opacity: 1,
+    offset: [0, -6],
+  })
+    .setContent(
+      `<span class="label-dot" style="background:${DIFF_COLORS[route.difficulty]}"></span>` +
+        route.name.replace(/\s*\(.*\)$/, "")
+    )
+    .setLatLng([mid.lat, mid.lon]);
+  entry.disp = exaggeratedEles(pts, 2.5);
+  entry.dispMin = Math.min(...entry.disp);
+  entry.dispSpan = Math.max(Math.max(...entry.disp) - entry.dispMin, 10);
   layer.on("click", () => selectRoute(entry));
   layer.bindTooltip(route.name, { sticky: true });
 
@@ -174,6 +217,7 @@ async function loadRoutes() {
     map.fitBounds(all.getBounds(), { padding: [40, 40] });
   }
   updateCounts();
+  updateLabels();
   sortGrid();
   if (currentView() === "ruter") {
     miniMapsBuilt = true;
@@ -213,7 +257,20 @@ function applyFilters() {
     entry.card.style.display = show ? "" : "none";
     entry.gridCard.style.display = show ? "" : "none";
   }
+  updateLabels();
 }
+
+// Rutenavn på kartet — vises først når man er zoomet litt inn, ellers blir det kaos
+const LABEL_MIN_ZOOM = 13;
+function updateLabels() {
+  const zoomedIn = map.getZoom() >= LABEL_MIN_ZOOM;
+  for (const entry of routeLayers) {
+    const on = zoomedIn && entryVisible(entry);
+    if (on && !map.hasLayer(entry.label)) entry.label.addTo(map);
+    if (!on && map.hasLayer(entry.label)) entry.label.remove();
+  }
+}
+map.on("zoomend", updateLabels);
 
 function updateCounts() {
   const counts = { alle: routeLayers.length, gronn: 0, bla: 0, rod: 0, sort: 0 };
@@ -273,6 +330,47 @@ let PROFILE_W = 700;
 const PROFILE_H = 84;
 const PROFILE_PAD = 4;
 
+// Profilkurven farges etter bratthet (ekte helning målt over ±60 m)
+const SLOPE_COLORS = [
+  { max: 7, color: "#3a7d4e" },
+  { max: 14, color: "#b3872e" },
+  { max: 22, color: "#c03b2d" },
+  { max: Infinity, color: "#1b1f24" },
+];
+
+function slopeColorAt(entry, i) {
+  const { pts, stats } = entry;
+  const R = 60;
+  let a = i,
+    b = i;
+  while (a > 0 && stats.cum[i] - stats.cum[a] < R) a--;
+  while (b < pts.length - 1 && stats.cum[b] - stats.cum[i] < R) b++;
+  const dd = stats.cum[b] - stats.cum[a] || 1;
+  const grade = Math.abs((pts[b].ele - pts[a].ele) / dd) * 100;
+  return SLOPE_COLORS.find((s) => grade < s.max).color;
+}
+
+// Del punktindeksene i sammenhengende løp med samme bratthetsfarge
+// (hvert løp starter der forrige slutter, så kurven blir uten hull)
+function slopeRuns(entry, idxs) {
+  const runs = [];
+  let cur = null;
+  for (const i of idxs) {
+    const color = slopeColorAt(entry, i);
+    if (!cur || cur.color !== color) {
+      if (cur) {
+        cur.idx.push(i);
+        runs.push(cur);
+      }
+      cur = { color, idx: [i] };
+    } else {
+      cur.idx.push(i);
+    }
+  }
+  if (cur) runs.push(cur);
+  return runs;
+}
+
 document.getElementById("detail-close").addEventListener("click", closeDetail);
 
 function closeDetail() {
@@ -291,12 +389,13 @@ function removeHoverMarker() {
 }
 
 function profileXY(entry, i) {
-  const { pts, stats } = entry;
-  const span = Math.max(stats.maxEle - stats.minEle, 10);
+  const { stats } = entry;
   const total = stats.cum[stats.cum.length - 1] || 1;
   const x = PROFILE_PAD + (stats.cum[i] / total) * (PROFILE_W - 2 * PROFILE_PAD);
   const y =
-    PROFILE_H - PROFILE_PAD - ((pts[i].ele - stats.minEle) / span) * (PROFILE_H - 26 - PROFILE_PAD);
+    PROFILE_H -
+    PROFILE_PAD -
+    ((entry.disp[i] - entry.dispMin) / entry.dispSpan) * (PROFILE_H - 26 - PROFILE_PAD);
   return [x, y];
 }
 
@@ -318,11 +417,18 @@ function showDetail(entry) {
   detailSvg.setAttribute("viewBox", `0 0 ${PROFILE_W} ${PROFILE_H}`);
   const line = pts.map((_, i) => profileXY(entry, i).join(",")).join(" ");
   const color = DIFF_COLORS[route.difficulty];
+  const idxs = pts.map((_, i) => i);
+  const segs = slopeRuns(entry, idxs)
+    .map(
+      (r) =>
+        `<polyline points="${r.idx.map((i) => profileXY(entry, i).join(",")).join(" ")}"
+           fill="none" stroke="${r.color}" stroke-width="2.5" stroke-linecap="round"/>`
+    )
+    .join("");
   detailSvg.innerHTML = `
     <polygon points="${PROFILE_PAD},${PROFILE_H} ${line} ${PROFILE_W - PROFILE_PAD},${PROFILE_H}"
              fill="${color}" opacity="0.12"/>
-    <polyline points="${line}" fill="none" stroke="${color}" stroke-width="2.5"
-              stroke-linecap="round"/>
+    ${segs}
     <g id="hover-group" style="display:none">
       <line id="hover-line" y1="22" y2="${PROFILE_H}" stroke="${color}" stroke-width="1"
             stroke-dasharray="3 3"/>
@@ -383,18 +489,26 @@ detailSvg.addEventListener("mouseleave", () => {
 
 const routeGrid = document.getElementById("route-grid");
 
-function miniProfilePoints(entry, w, h) {
+function miniProfileSvg(entry, w, h) {
   const { pts, stats } = entry;
-  const span = Math.max(stats.maxEle - stats.minEle, 10);
   const total = stats.cum[stats.cum.length - 1] || 1;
-  const step = Math.max(1, Math.floor(pts.length / 60));
-  const coords = [];
-  for (let i = 0; i < pts.length; i += step) {
+  const step = Math.max(1, Math.floor(pts.length / 120));
+  const idxs = [];
+  for (let i = 0; i < pts.length; i += step) idxs.push(i);
+  const xy = (i) => {
     const x = (stats.cum[i] / total) * w;
-    const y = h - 3 - ((pts[i].ele - stats.minEle) / span) * (h - 8);
-    coords.push(`${x.toFixed(1)},${y.toFixed(1)}`);
-  }
-  return coords.join(" ");
+    const y = h - 3 - ((entry.disp[i] - entry.dispMin) / entry.dispSpan) * (h - 8);
+    return `${x.toFixed(1)},${y.toFixed(1)}`;
+  };
+  const area = idxs.map(xy).join(" ");
+  const segs = slopeRuns(entry, idxs)
+    .map(
+      (r) =>
+        `<polyline points="${r.idx.map(xy).join(" ")}" fill="none" stroke="${r.color}"
+           stroke-width="2" stroke-linecap="round"/>`
+    )
+    .join("");
+  return { area, segs };
 }
 
 function buildGridCard(entry) {
@@ -402,7 +516,7 @@ function buildGridCard(entry) {
   const color = DIFF_COLORS[route.difficulty];
   const card = document.createElement("div");
   card.className = "grid-card";
-  const line = miniProfilePoints(entry, 240, 36);
+  const prof = miniProfileSvg(entry, 240, 36);
   const status = route.temp ? "Forhåndsvisning — ikke lagret" : "Åpen · tørr sti";
   card.innerHTML = `
     <div class="grid-map">
@@ -413,9 +527,8 @@ function buildGridCard(entry) {
       <span class="grid-name">${route.name}</span>
       <span class="grid-meta">${metaLine(route, stats)}</span>
       <svg class="grid-profile" viewBox="0 0 240 36" preserveAspectRatio="none">
-        <polygon points="0,36 ${line} 240,36" fill="rgba(31,86,136,0.1)"/>
-        <polyline points="${line}" fill="none" stroke="${color}" stroke-width="2"
-                  stroke-linecap="round"/>
+        <polygon points="0,36 ${prof.area} 240,36" fill="rgba(31,86,136,0.1)"/>
+        ${prof.segs}
       </svg>
       <div class="grid-footer">
         <a class="gpx-link" href="${route.file}" download>↓ GPX</a>
@@ -426,7 +539,7 @@ function buildGridCard(entry) {
     if (ev.target.closest(".gpx-link")) return;
     location.hash = "#kart";
     showView("kart");
-    selectRoute(entry);
+    setTimeout(() => selectRoute(entry), 60);
   });
   routeGrid.insertBefore(card, document.getElementById("dropzone"));
   return card;
@@ -596,6 +709,35 @@ for (const f of ["data/sykkelrute_sti.geojson", "data/sykkelrute_vei.geojson"]) 
     });
 }
 poiLayers["poi-kommune"] = kommuneRuter;
+
+// Skiheisen (Kongsberg skisenter) — geometri fra OSM i data/heis.geojson
+const heisLayer = L.layerGroup();
+fetch("data/heis.geojson")
+  .then((r) => r.json())
+  .then((gj) => {
+    L.geoJSON(gj, {
+      style: { color: "#7a5a1d", weight: 2.5, dashArray: "1 7", lineCap: "round" },
+    })
+      .bindTooltip("Skiheisen (Kongsberg skisenter)", { sticky: true })
+      .addTo(heisLayer);
+    const coords = gj.features[0].geometry.coordinates;
+    for (const c of [coords[0], coords[coords.length - 1]]) {
+      L.circleMarker([c[1], c[0]], {
+        radius: 5,
+        color: "#fff",
+        weight: 1.5,
+        fillColor: "#b3872e",
+        fillOpacity: 1,
+      }).addTo(heisLayer);
+    }
+    const mid = coords[Math.floor(coords.length / 2)];
+    L.tooltip({ permanent: true, direction: "top", className: "route-label", opacity: 1 })
+      .setContent('<span class="label-dot" style="background:#b3872e"></span>Skiheisen')
+      .setLatLng([mid[1], mid[0]])
+      .addTo(heisLayer);
+  })
+  .catch((err) => console.error("Klarte ikke laste heisen", err));
+poiLayers["poi-heis"] = heisLayer;
 
 for (const [id, layer] of Object.entries(poiLayers)) {
   const box = document.getElementById(id);

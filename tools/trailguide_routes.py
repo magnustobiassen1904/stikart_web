@@ -21,6 +21,9 @@ SELECTED = {
     6201: "telefonlopa_helt_ned.gpx",
     718: "gruvaasen_st_anger.gpx",
     4527: "bakerommen.gpx",
+    4524: "bergmannsstien.gpx",
+    6203: "knuteveien.gpx",
+    4534: "korsveien.gpx",
 }
 
 trails = json.load(open(DATA))
